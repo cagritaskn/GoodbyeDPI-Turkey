@@ -10,8 +10,8 @@ GoodbyeDPI ya da GoodbyeDPI-Turkey sisteminizde **hiçbir kalıcı değişiklik 
 
 ### GoodbyeDPI-Turkey'i ve Dosyaları Tamamen Silmek​
 
-*   Eğer **batch olarak kullanım** sağlıyorsanız (İsimleri turkey\_\*\*\* ile başlayan komut dosyaları ile tek seferlik kullanıyorsanız) batch penceresini (Siyah arka planlı içinde yazılar bulunan pencere) kapattıktan sonra .zip dosyasını ayıkladığınız klasörü tamamen silebilirsiniz.
-*   Eğer **hizmet kurarak kullanım** sağlıyorsanız ya da daha önce hizmet kurduysanız (İsimleri service\_\*\*\* ile başlayan komut dosyaları ile ilgili hizmetin kurulumunu sağladıysanız) öncelikle .zip dosyasının içeriğini ayıkladığınız klasörde bulunan service\_remove.cmd dosyasını sağ tıklayıp yönetici olarak çalıştırdıktan sonra açılan pencerede herhangi bir tuşa basarak hizmeti bilgisayarınızdan kaldırmış olursunuz. Bu işlemden sonra .zip dosyasını ayıkladığınız klasördeki dosyaların tamamını silebilirsiniz.
+*   Eğer **batch olarak kullanım** sağlıyorsanız (İsimleri **turkey\_\*\*\*** ile başlayan komut dosyaları ile tek seferlik kullanıyorsanız) batch penceresini (Siyah arka planlı içinde yazılar bulunan pencere) kapattıktan sonra .zip dosyasını ayıkladığınız klasörü tamamen silebilirsiniz.
+*   Eğer **hizmet kurarak kullanım** sağlıyorsanız ya da daha önce hizmet kurduysanız (İsimleri **service\_\*\*\*** ile başlayan komut dosyaları ile ilgili hizmetin kurulumunu sağladıysanız) öncelikle .zip dosyasının içeriğini ayıkladığınız klasörde bulunan **service\_remove.cmd** dosyasını sağ tıklayıp yönetici olarak çalıştırdıktan sonra açılan pencerede herhangi bir tuşa basarak hizmeti bilgisayarınızdan kaldırmış olursunuz. Bu işlemden sonra .zip dosyasını ayıkladığınız klasördeki dosyaların tamamını silebilirsiniz.
 
 ### ​
 
@@ -21,7 +21,7 @@ Bu işlemleri gerçekleştirdikten sonra eğer daha önce Windows ayarlarından 
 
 #### Windows 10 İçin:​
 
-*   Windows arama kısmına **Ağ bağlatılarını görüntüle** yazın ve **Ağ bağlantılarını görüntüle** seçeneğine tıklayın. (Windows+R tuş kombinasyonu ile ya da Başlat menüsünden Çalıştır penceresini açıp, kutucuğa ncpa.cpl yazıp Çalıştır veya Tamam butonuna tıklayarak da aynı pencereye erişebilirsiniz)
+*   Windows arama kısmına **Ağ bağlatılarını görüntüle** yazın ve **Ağ bağlantılarını görüntüle** seçeneğine tıklayın. (**Windows+R** tuş kombinasyonu ile ya da **Başlat** menüsünden **Çalıştır** penceresini açıp, kutucuğa **ncpa.cpl** yazıp **Çalıştır** veya **Tamam** butonuna tıklayarak da aynı pencereye erişebilirsiniz)
 *   Açılan pencerede bulunan adaptörlerde eğer Wi-Fi için DNS ataması yaptıysanız Wi-Fi adaptörünüzü, eğer Ethernet için DNS ataması yaptıysanız Ethernet adaptörünüzü seçip sağ tıklayarak Özellikler seçeneğini seçin.
 *   Açılan pencerede **İnternet Protokolü Sürüm 4 (TCP/IPv4)** isimli seçeneğe tıklayıp aktifleşen Özellikler butonuna tıklayın. (IPv6 için atama yaptıysanız aynı işlemleri **İnternet Protokolü Sürüm 6** için de uygulayın)
 *   Ardından alt kısımda bulunan **DNS sunucu adresini otomatik olarak al** seçeneğini seçip **Tamam** butonuna tıklayın.
