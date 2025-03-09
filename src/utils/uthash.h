@@ -21,9 +21,14 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+// UTHash - a hash table implementation for C structures
+// This macro-based library provides hash table functionality for structures/objects
+// It supports operations like add, find, replace, delete, sort, and more
+
 #ifndef UTHASH_H
 #define UTHASH_H
 
+// Library version identifier
 #define UTHASH_VERSION 2.3.0
 
 #include <string.h>   /* memcmp, memset, strlen */

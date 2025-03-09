@@ -14,6 +14,7 @@ struct fake_t {
     size_t size;
 };
 
+// This array holds fake packet patterns for forging requests.
 static struct fake_t *fakes[30] = {0};
 int fakes_count = 0;
 int fakes_resend = 1;

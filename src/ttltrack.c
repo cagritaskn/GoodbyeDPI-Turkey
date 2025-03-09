@@ -17,6 +17,7 @@
 /* key ('4' for IPv4 or '6' for IPv6 + srcip[16] + dstip[16] + srcport[2] + dstport[2]) */
 #define TCP_CONNRECORD_KEY_LEN 37
 
+// Interval between connection tracking cleanup operations
 #define TCP_CLEANUP_INTERVAL_SEC 30
 
 /* HACK!
@@ -28,17 +29,19 @@
 #undef uthash_strlen
 #define uthash_strlen(s) TCP_CONNRECORD_KEY_LEN
 
+// Connection record structure for TCP tracking
 typedef struct tcp_connrecord {
     /* key ('4' for IPv4 or '6' for IPv6 + srcip[16] + dstip[16] + srcport[2] + dstport[2]) */
     char key[TCP_CONNRECORD_KEY_LEN];
     time_t time;         /* time when this record was added */
-    uint16_t ttl;
+    uint16_t ttl;        /* TTL value of the connection */
     UT_hash_handle hh;   /* makes this structure hashable */
 } tcp_connrecord_t;
 
 static time_t last_cleanup = 0;
 static tcp_connrecord_t *conntrack = NULL;
 
+// Fill connection key with appropriate data
 inline static void fill_key_data(char *key, const uint8_t is_ipv6, const uint32_t srcip[4],
                     const uint32_t dstip[4], const uint16_t srcport, const uint16_t dstport)
 {
@@ -67,6 +70,7 @@ inline static void fill_key_data(char *key, const uint8_t is_ipv6, const uint32_
     offset += sizeof(dstport);
 }
 
+// Extract connection data from key
 inline static void fill_data_from_key(uint8_t *is_ipv6, uint32_t srcip[4], uint32_t dstip[4],
                                      uint16_t *srcport, uint16_t *dstport, const char *key)
 {
@@ -94,6 +98,7 @@ inline static void fill_data_from_key(uint8_t *is_ipv6, uint32_t srcip[4], uint3
     offset += sizeof(*dstport);
 }
 
+// Create connection tracking key from IP and port information
 inline static void construct_key(const uint32_t srcip[4], const uint32_t dstip[4],
                                  const uint16_t srcport, const uint16_t dstport,
                                  char *key, const uint8_t is_ipv6)
@@ -106,6 +111,7 @@ inline static void construct_key(const uint32_t srcip[4], const uint32_t dstip[4
     debug("Construct key end\n");
 }
 
+// Extract connection info from key and connection record
 inline static void deconstruct_key(const char *key, const tcp_connrecord_t *connrecord,
                                    tcp_conntrack_info_t *conn_info)
 {
@@ -122,6 +128,7 @@ inline static void deconstruct_key(const char *key, const tcp_connrecord_t *conn
     debug("Deconstruct key end\n");
 }
 
+// Check if connection exists in tracking table and retrieve it
 static int check_get_tcp_conntrack_key(const char *key, tcp_connrecord_t **connrecord) {
     tcp_connrecord_t *tmp_connrecord = NULL;
     if (!conntrack) return FALSE;
@@ -137,6 +144,7 @@ static int check_get_tcp_conntrack_key(const char *key, tcp_connrecord_t **connr
     return FALSE;
 }
 
+// Add connection to tracking table
 static int add_tcp_conntrack(const uint32_t srcip[4], const uint32_t dstip[4],
                              const uint16_t srcport, const uint16_t dstport,
                              const uint8_t is_ipv6, const uint8_t ttl
@@ -160,6 +168,7 @@ static int add_tcp_conntrack(const uint32_t srcip[4], const uint32_t dstip[4],
     return FALSE;
 }
 
+// Remove expired connections from tracking table
 static void tcp_cleanup() {
     tcp_connrecord_t *tmp_connrecord, *tmp_connrecord2 = NULL;
 
@@ -180,6 +189,7 @@ static void tcp_cleanup() {
     }
 }
 
+// Process incoming TCP packets to track TTL values
 int tcp_handle_incoming(uint32_t srcip[4], uint32_t dstip[4],
                         uint16_t srcport, uint16_t dstport,
                         uint8_t is_ipv6, uint8_t ttl)
@@ -193,6 +203,7 @@ int tcp_handle_incoming(uint32_t srcip[4], uint32_t dstip[4],
     return FALSE;
 }
 
+// Process outgoing TCP packets, match with tracked connections
 int tcp_handle_outgoing(uint32_t srcip[4], uint32_t dstip[4],
                         uint16_t srcport, uint16_t dstport,
                         tcp_conntrack_info_t *conn_info,
@@ -219,6 +230,7 @@ int tcp_handle_outgoing(uint32_t srcip[4], uint32_t dstip[4],
     return FALSE;
 }
 
+// Calculate optimal TTL for packet evasion techniques
 int tcp_get_auto_ttl(const uint8_t ttl, const uint8_t autottl1,
                      const uint8_t autottl2, const uint8_t minhops,
                      const uint8_t maxttl) {

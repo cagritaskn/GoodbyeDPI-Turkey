@@ -26,10 +26,12 @@ WINSOCK_API_LINKAGE INT WSAAPI inet_pton(INT Family, LPCSTR pStringBuf, PVOID pA
 
 #define GOODBYEDPI_VERSION "v0.2.3rc3"
 
+// Exit with failure after waiting 20 seconds (gives user time to read error messages)
 #define die() do { sleep(20); exit(EXIT_FAILURE); } while (0)
 
-#define MAX_FILTERS 4
+#define MAX_FILTERS 4    // Maximum number of WinDivert filters that can be used simultaneously
 
+// Network filters to exclude local networks from processing
 #define DIVERT_NO_LOCALNETSv4_DST "(" \
                    "(ip.DstAddr < 127.0.0.1 or ip.DstAddr > 127.255.255.255) and " \
                    "(ip.DstAddr < 10.0.0.0 or ip.DstAddr > 10.255.255.255) and " \
@@ -45,6 +47,7 @@ WINSOCK_API_LINKAGE INT WSAAPI inet_pton(INT Family, LPCSTR pStringBuf, PVOID pA
                    "(ip.SrcAddr < 169.254.0.0 or ip.SrcAddr > 169.254.255.255)" \
                    ")"
 
+// IPv6 filters for local networks
 #define DIVERT_NO_LOCALNETSv6_DST "(" \
                    "(ipv6.DstAddr > ::1) and " \
                    "(ipv6.DstAddr < 2001::0 or ipv6.DstAddr > 2001:1::0) and " \
@@ -61,8 +64,10 @@ WINSOCK_API_LINKAGE INT WSAAPI inet_pton(INT Family, LPCSTR pStringBuf, PVOID pA
                    ")"
 
 /* #IPID# is a template to find&replace */
-#define IPID_TEMPLATE "#IPID#"
-#define MAXPAYLOADSIZE_TEMPLATE "#MAXPAYLOADSIZE#"
+#define IPID_TEMPLATE "#IPID#"    // Placeholder for IP ID filter values
+#define MAXPAYLOADSIZE_TEMPLATE "#MAXPAYLOADSIZE#"    // Placeholder for max payload size filter
+
+// Main WinDivert filter to capture HTTP and HTTPS traffic
 #define FILTER_STRING_TEMPLATE \
         "(tcp and !impostor and !loopback " MAXPAYLOADSIZE_TEMPLATE " and " \
         "((inbound and (" \
@@ -79,15 +84,20 @@ WINSOCK_API_LINKAGE INT WSAAPI inet_pton(INT Family, LPCSTR pStringBuf, PVOID pA
          "(tcp.DstPort == 80 or tcp.DstPort == 443) and tcp.Ack and " \
          "(" DIVERT_NO_LOCALNETSv4_DST " or " DIVERT_NO_LOCALNETSv6_DST "))" \
         "))"
+
+// Filter for blocking QUIC/HTTP3 traffic
 #define FILTER_PASSIVE_BLOCK_QUIC "outbound and !impostor and !loopback and udp " \
         "and udp.DstPort == 443 and udp.PayloadLength >= 1200 " \
         "and udp.Payload[0] >= 0xC0 and udp.Payload32[1b] == 0x01"
+
+// Filter for passive DPI - captures inbound RST packets
 #define FILTER_PASSIVE_STRING_TEMPLATE "inbound and ip and tcp and " \
         "!impostor and !loopback and " \
         "(true " IPID_TEMPLATE ") and " \
         "(tcp.SrcPort == 443 or tcp.SrcPort == 80) and tcp.Rst and " \
         DIVERT_NO_LOCALNETSv4_SRC
 
+// Macro to set HTTP fragment size option only if not already set
 #define SET_HTTP_FRAGMENT_SIZE_OPTION(fragment_size) do { \
     if (!http_fragment_size) { \
         http_fragment_size = (unsigned int)fragment_size; \
