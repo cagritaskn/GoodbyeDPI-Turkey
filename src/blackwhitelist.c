@@ -11,13 +11,17 @@
 #include "utils/uthash.h"
 #include "utils/getline.h"
 
+// Domain record structure using uthash for hash table implementation
 typedef struct blackwhitelist_record {
-    const char *host;
-    UT_hash_handle hh;   /* makes this structure hashable */
+    const char *host;         // Domain hostname
+    UT_hash_handle hh;        // Makes this structure hashable
 } blackwhitelist_record_t;
 
 static blackwhitelist_record_t *blackwhitelist = NULL;
 
+/**
+ * Check if a hostname exists in the blackwhitelist
+ */
 static int check_get_hostname(const char *host) {
     blackwhitelist_record_t *tmp_record = NULL;
     if (!blackwhitelist) return FALSE;
@@ -31,6 +35,9 @@ static int check_get_hostname(const char *host) {
     return FALSE;
 }
 
+/**
+ * Add a hostname to the blackwhitelist if it doesn't already exist
+ */
 static int add_hostname(const char *host) {
     if (!host)
         return FALSE;
@@ -53,6 +60,9 @@ static int add_hostname(const char *host) {
     return FALSE;
 }
 
+/**
+ * Load a list of hostnames from a file into the blackwhitelist
+ */
 int blackwhitelist_load_list(const char *filename) {
     char *line = malloc(HOST_MAXLEN + 1);
     size_t linelen = HOST_MAXLEN + 1;
@@ -84,6 +94,10 @@ int blackwhitelist_load_list(const char *filename) {
     return TRUE;
 }
 
+/**
+ * Check if a hostname or any of its parent domains are in the blackwhitelist
+ * Example: checks sub.domain.com, domain.com, and com
+ */
 int blackwhitelist_check_hostname(const char *host_addr, size_t host_len) {
     char current_host[HOST_MAXLEN + 1];
     char *tokenized_host = NULL;

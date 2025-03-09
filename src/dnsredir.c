@@ -17,9 +17,10 @@
 #include "dnsredir.h"
 #include "utils/uthash.h"
 
-/* key ('4' for IPv4 or '6' for IPv6 + srcip[16] + srcport[2]) */
+// Key format: '4'/'6' (IPv4/IPv6) + srcip[16] + srcport[2]
 #define UDP_CONNRECORD_KEY_LEN 19
 
+// Clean up old DNS connection records every 30 seconds
 #define DNS_CLEANUP_INTERVAL_SEC 30
 
 /* HACK!
@@ -31,18 +32,22 @@
 #undef uthash_strlen
 #define uthash_strlen(s) UDP_CONNRECORD_KEY_LEN
 
+// DNS connection tracking record structure
 typedef struct udp_connrecord {
-    /* key ('4' for IPv4 or '6' for IPv6 + srcip[16] + srcport[2]) */
-    char key[UDP_CONNRECORD_KEY_LEN];
-    time_t time;         /* time when this record was added */
-    uint32_t dstip[4];
-    uint16_t dstport;
-    UT_hash_handle hh;   /* makes this structure hashable */
+    char key[UDP_CONNRECORD_KEY_LEN]; // Lookup key
+    time_t time;         // Time when record was added
+    uint32_t dstip[4];   // Destination IP (can be IPv4 or IPv6)
+    uint16_t dstport;    // Destination port
+    UT_hash_handle hh;   // Makes this structure hashable with uthash
 } udp_connrecord_t;
 
 static time_t last_cleanup = 0;
 static udp_connrecord_t *conntrack = NULL;
 
+/**
+ * Flush DNS resolver cache in Windows
+ * Ensures redirected DNS changes take effect immediately
+ */
 void flush_dns_cache() {
     INT_PTR WINAPI (*DnsFlushResolverCache)();
 
@@ -59,6 +64,9 @@ void flush_dns_cache() {
     FreeLibrary(dnsapi);
 }
 
+/**
+ * Fill key data structure with connection information
+ */
 inline static void fill_key_data(char *key, const uint8_t is_ipv6, const uint32_t srcip[4],
                           const uint16_t srcport)
 {
@@ -74,6 +82,9 @@ inline static void fill_key_data(char *key, const uint8_t is_ipv6, const uint32_
     *(uint16_t*)(key + sizeof(uint8_t) + sizeof(uint32_t) * 4) = srcport;
 }
 
+/**
+ * Extract connection information from key data
+ */
 inline static void fill_data_from_key(uint8_t *is_ipv6, uint32_t srcip[4], uint16_t *srcport,
                                       const char *key)
 {
@@ -88,6 +99,9 @@ inline static void fill_data_from_key(uint8_t *is_ipv6, uint32_t srcip[4], uint1
     *srcport = *(uint16_t*)(key + sizeof(uint8_t) + sizeof(uint32_t) * 4);
 }
 
+/**
+ * Construct a connection tracking key from connection parameters
+ */
 inline static void construct_key(const uint32_t srcip[4], const uint16_t srcport,
                                  char *key, const uint8_t is_ipv6)
 {
@@ -99,6 +113,9 @@ inline static void construct_key(const uint32_t srcip[4], const uint16_t srcport
     debug("Construct key end\n");
 }
 
+/**
+ * Extract connection info from key and record for use in the application
+ */
 inline static void deconstruct_key(const char *key, const udp_connrecord_t *connrecord,
                                    conntrack_info_t *conn_info)
 {
@@ -118,6 +135,9 @@ inline static void deconstruct_key(const char *key, const udp_connrecord_t *conn
     debug("Deconstruct key end\n");
 }
 
+/**
+ * Check if a connection exists in the tracking table
+ */
 static int check_get_udp_conntrack_key(const char *key, udp_connrecord_t **connrecord) {
     udp_connrecord_t *tmp_connrecord = NULL;
     if (!conntrack) return FALSE;
@@ -133,6 +153,9 @@ static int check_get_udp_conntrack_key(const char *key, udp_connrecord_t **connr
     return FALSE;
 }
 
+/**
+ * Add a new DNS connection to the tracking table
+ */
 static int add_udp_conntrack(const uint32_t srcip[4], const uint16_t srcport,
                              const uint32_t dstip[4], const uint16_t dstport,
                              const uint8_t is_ipv6
@@ -163,6 +186,9 @@ static int add_udp_conntrack(const uint32_t srcip[4], const uint16_t srcport,
     return FALSE;
 }
 
+/**
+ * Periodically clean up old DNS connection records
+ */
 static void dns_cleanup() {
     udp_connrecord_t *tmp_connrecord, *tmp_connrecord2 = NULL;
 
@@ -183,6 +209,9 @@ static void dns_cleanup() {
     }
 }
 
+/**
+ * Check if a packet looks like a DNS request/response
+ */
 int dns_is_dns_packet(const char *packet_data, const UINT packet_dataLen, const int outgoing) {
     if (packet_dataLen < 16) return FALSE;
 
@@ -197,6 +226,10 @@ int dns_is_dns_packet(const char *packet_data, const UINT packet_dataLen, const 
     return FALSE;
 }
 
+/**
+ * Handle outgoing DNS requests
+ * Tracks them for later correlation with responses
+ */
 int dns_handle_outgoing(const uint32_t srcip[4], const uint16_t srcport,
                         const uint32_t dstip[4], const uint16_t dstport,
                         const char *packet_data, const UINT packet_dataLen,
@@ -216,6 +249,10 @@ int dns_handle_outgoing(const uint32_t srcip[4], const uint16_t srcport,
     return FALSE;
 }
 
+/**
+ * Handle incoming DNS responses
+ * Correlates them with tracked requests and provides redirection info
+ */
 int dns_handle_incoming(const uint32_t srcip[4], const uint16_t srcport,
                         const char *packet_data, const UINT packet_dataLen,
                         conntrack_info_t *conn_info, const uint8_t is_ipv6)

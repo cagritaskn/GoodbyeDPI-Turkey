@@ -28,6 +28,7 @@ int service_register(int argc, char *argv[])
      * so we should copy all arguments first and then
      * handle the failure.
      */
+    // Save command line arguments to use them later in service_main
     if (!service_argc && !service_argv) {
         service_argc = argc;
         service_argv = calloc((size_t)(argc + 1), sizeof(void*));
@@ -36,8 +37,10 @@ int service_register(int argc, char *argv[])
         }
     }
 
+    // Start the service control dispatcher
     ret = StartServiceCtrlDispatcher(ServiceTable);
 
+    // Clean up allocated memory if service registration failed or service stopped
     if (service_argc && service_argv) {
         for (i = 0; i < service_argc; i++) {
             free(service_argv[i]);
@@ -51,6 +54,7 @@ int service_register(int argc, char *argv[])
 void service_main(int argc __attribute__((unused)),
                   char *argv[] __attribute__((unused)))
 {
+    // Initialize service status structure
     ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS; 
     ServiceStatus.dwCurrentState = SERVICE_RUNNING;
     ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
@@ -59,6 +63,7 @@ void service_main(int argc __attribute__((unused)),
     ServiceStatus.dwCheckPoint = 1;
     ServiceStatus.dwWaitHint = 0;
 
+    // Register the service control handler function
     hStatus = RegisterServiceCtrlHandler(
         SERVICE_NAME,
         (LPHANDLER_FUNCTION)service_controlhandler);
@@ -68,6 +73,7 @@ void service_main(int argc __attribute__((unused)),
         return;
     }
 
+    // Update service status to running
     SetServiceStatus(hStatus, &ServiceStatus);
 
     // Calling main with saved argc & argv
@@ -84,6 +90,7 @@ void service_controlhandler(DWORD request)
     {
         case SERVICE_CONTROL_STOP:
         case SERVICE_CONTROL_SHUTDOWN:
+            // Perform cleanup before service stops
             deinit_all();
             ServiceStatus.dwWin32ExitCode = 0;
             ServiceStatus.dwCurrentState  = SERVICE_STOPPED;

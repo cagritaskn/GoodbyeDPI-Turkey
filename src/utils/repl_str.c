@@ -6,6 +6,11 @@
 #include <stdint.h>
 #endif
 
+/**
+ * Replace all occurrences of substring 'from' with 'to' in string 'str'
+ * Returns a newly allocated string with replacements or NULL on error
+ * Uses a cache of positions to avoid repeatedly rescanning the string
+ */
 char *repl_str(const char *str, const char *from, const char *to) {
 
 	/* Adjust each of the below values to suit your needs. */
