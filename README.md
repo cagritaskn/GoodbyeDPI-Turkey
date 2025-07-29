@@ -1,3 +1,7 @@
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey.svg)](https://www.microsoft.com/windows)
+[![Downloads](https://img.shields.io/github/downloads/cagritaskn/SplitWire-Turkey/total.svg)](https://github.com/cagritaskn/GoodbyeDPI-Turkey/releases/)
+
 # SplitWire-Turkey Hakkında Önemli Not (29.07.2025)
 >
 > [!IMPORTANT]
