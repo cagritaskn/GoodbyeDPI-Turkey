@@ -1,3 +1,8 @@
+# SplitWire-Turkey Hakkında Önemli Not (13.01.2025)
+>
+> [!IMPORTANT]
+> Bazı kullanıcılar Discord'a erişmekte veya diğer web sitelerindeki bazı içeriklerin yüklenmemesi hakkında geri bildirimde bulunduğundan farklı metotlarla ancak aynı işlev ile çalışan **[SplitWire-Turkey](https://github.com/cagritaskn/SplitWire-Turkey)** uygulamasını yayınladık. GoodbyeDPI'ı kaldırdıktan sonra ([GoodbyeDPI-Turkey Doğru Şekilde Kaldırma Rehberi](https://github.com/cagritaskn/GoodbyeDPI-Turkey/blob/master/REVERT.md)) **[bu aracımızı](https://github.com/cagritaskn/SplitWire-Turkey)** kullanmayı deneyebilirsiniz.
+
 # Kaspersky Antivirüsü Hakkında Önemli Not (13.01.2025)
 >
 > [!CAUTION]
