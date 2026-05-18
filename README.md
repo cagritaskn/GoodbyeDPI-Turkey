@@ -1,6 +1,10 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey.svg)](https://www.microsoft.com/windows)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS-lightgrey.svg)](#)
 [![Downloads](https://img.shields.io/github/downloads/cagritaskn/GoodbyeDPI-Turkey/total.svg)](https://github.com/cagritaskn/GoodbyeDPI-Turkey/releases/)
+
+> **macOS desteği:** Bu fork artık macOS'ta da çalışır (Intel ve Apple Silicon).
+> Kurulum ve kullanım için **[`macos/README.md`](macos/README.md)** dosyasına bakın.
+> Aşağıdaki Windows talimatları aynen geçerlidir; her iki platform tek depoda yan yana barınır.
 
 # SplitWire-Turkey Hakkında Önemli Not (29.07.2025)
 >
@@ -75,6 +79,36 @@ GoodbyeDPI Türkiye fork'unu batch dosyasını çalıştırarak kullanmak için 
 ## GoodbyeDPI'ı Kaldırmak ve DNS Ayarlarını Eski Haline Getirmek
 
 GoodbyeDPI'ı tamamen kapatmak ve silmek, bununla birlikte DNS atamasını kaldırmak için **[bu rehberi](https://github.com/cagritaskn/GoodbyeDPI-Turkey/blob/master/REVERT.md)** takip edebilirsiniz.
+
+## macOS Kullanıcıları İçin
+
+> [!NOTE]
+> macOS'ta WinDivert sürücüsü olmadığı için Windows kodu aynen çalışmaz.
+> Bu depo macOS tarafında **byedpi (`ciadpi`)** isimli, aynı DPI atlatma
+> tekniklerini kullanan ancak userspace bir SOCKS5 proxy olarak çalışan
+> aracı sarmalar. `--set-ttl` / `--auto-ttl` gibi sahte-paket+düşük-TTL
+> tabanlı yöntemler macOS'ta tam olarak desteklenmez; bunun yerine TLS
+> ClientHello bölme, ters sıralı segment gönderme, TLS kayıt bölme ve
+> HTTP başlık karıştırma kombinasyonları kullanılır. Detaylar ve tam
+> Windows ↔ macOS yöntem eşlemesi için **[`macos/README.md`](macos/README.md)**.
+
+macOS kullanıcıları için özet:
+
+```bash
+# 1. Tek seferlik kurulum
+git clone https://github.com/cagritaskn/GoodbyeDPI-Turkey.git
+cd GoodbyeDPI-Turkey
+./macos/build.sh                                            # ciadpi'yi derler
+
+# 2. Tek seferlik kullanım (Ctrl-C ile çıkınca ayarlar otomatik geri alınır)
+sudo ./macos/scripts/turkey_dnsredir.sh
+
+# 3. Hizmet olarak kurma (her açılışta otomatik başlar)
+sudo ./macos/scripts/service_install_dnsredir_turkey.sh
+
+# 4. Hizmeti kaldırma + ağ ayarlarını eski haline döndürme
+sudo ./macos/scripts/service_remove.sh
+```
 
 ## Sık Karşılaşılan Sorunlar
 

@@ -4,9 +4,13 @@ on:
   push:
     paths:
       - 'src/**'
+      - 'macos/**'
+      - '.github/workflows/build.yml'
   pull_request:
     paths:
       - 'src/**'
+      - 'macos/**'
+      - '.github/workflows/build.yml'
   workflow_dispatch:
 
 env:
@@ -79,3 +83,56 @@ jobs:
         with:
           name: goodbyedpi_x86_${{ steps.vars.outputs.sha_short }}
           path: goodbyedpi_x86_${{ steps.vars.outputs.sha_short }}
+
+  build-macos:
+    name: Build macOS (ciadpi)
+    strategy:
+      fail-fast: false
+      matrix:
+        # macos-13 = Intel runner, macos-14 = Apple Silicon (M-series).
+        os: [macos-13, macos-14]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Declare short commit variable
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Pick artifact arch name
+        id: arch
+        run: |
+          if [[ "${{ matrix.os }}" == "macos-13" ]]; then
+            echo "name=macos_x86_64" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=macos_arm64"  >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Sanity-check bash scripts
+        run: |
+          set -e
+          chmod +x macos/build.sh macos/scripts/*.sh
+          for f in macos/build.sh macos/scripts/*.sh; do bash -n "$f"; done
+
+      - name: Build ciadpi
+        run: ./macos/build.sh
+
+      - name: Stage release directory
+        run: |
+          set -e
+          OUT="goodbyedpi-turkey_${{ steps.arch.outputs.name }}_${{ steps.vars.outputs.sha_short }}"
+          mkdir -p "$OUT/bin" "$OUT/scripts" "$OUT/launchd"
+          cp macos/bin/ciadpi                                      "$OUT/bin/"
+          cp macos/scripts/*.sh                                    "$OUT/scripts/"
+          cp macos/launchd/com.cagritaskn.goodbyedpi-turkey.plist.template "$OUT/launchd/"
+          # A copy of _lib.sh is required by every script — it's already
+          # in macos/scripts/, so the recursive copy above covers it.
+          cp macos/README.md                                       "$OUT/README.md" || true
+          chmod +x "$OUT/scripts/"*.sh
+          echo "OUT=$OUT" >> "$GITHUB_ENV"
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.OUT }}
+          path: ${{ env.OUT }}

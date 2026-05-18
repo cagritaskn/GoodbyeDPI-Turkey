@@ -46,6 +46,42 @@ Bu işlemleri gerçekleştirdikten sonra eğer daha önce Windows ayarlarından 
 
 ### ​
 
+### macOS'ta Kaldırma​
+
+macOS sürümünü kullanıyorsanız bu adımları izleyin:
+
+- **Tek seferlik kullanım** (`turkey_dnsredir*.sh` ile çalıştırdıysanız):
+  Çalışan terminal penceresinde **Ctrl-C** yapın. Script çıkışta SOCKS proxy
+  ve DNS ayarlarını **otomatik olarak eski haline döndürür**. Ardından depo
+  klasörünü silebilirsiniz.
+
+- **Hizmet olarak kullanım** (`service_install_*.sh` çalıştırdıysanız):
+  ```bash
+  sudo ./macos/scripts/service_remove.sh
+  ```
+  Bu komut LaunchDaemon'ı (`/Library/LaunchDaemons/com.cagritaskn.goodbyedpi-turkey.plist`)
+  kaldırır, durdurur ve SOCKS proxy + DNS ayarlarını kurulumdan önceki haline
+  döndürür. Sonrasında depo klasörünü silebilirsiniz.
+
+- **Elle kontrol etmek isterseniz**:
+  ```bash
+  # Hizmetin gerçekten kaldırıldığını doğrulayın
+  sudo launchctl print system/com.cagritaskn.goodbyedpi-turkey   # "Could not find ..." dönerse kaldırılmıştır
+  ls /Library/LaunchDaemons/com.cagritaskn.goodbyedpi-turkey.plist   # var olmamalı
+
+  # Aktif servisteki SOCKS proxy + DNS'in beklediğiniz halde olduğunu doğrulayın
+  networksetup -getsocksfirewallproxy "Wi-Fi"
+  networksetup -getdnsservers          "Wi-Fi"
+
+  # Eğer hâlâ açık görünüyorsa elle kapatın
+  sudo networksetup -setsocksfirewallproxystate "Wi-Fi" off
+  sudo networksetup -setdnsservers              "Wi-Fi" Empty
+  ```
+
+macOS'ta WinDivert benzeri bir kernel sürücüsü kurulmaz; geride yalnızca
+sistem ağ ayarlarındaki SOCKS proxy ve (varsa) DNS atamaları kalır. Yukarıdaki
+komutlar bu izleri tamamen temizler.
+
 ### WinDivert SYS Dosyaları Kullanımda Hatası​
 
 Eğer ilgili dosyaları silmeye çalışırken **Dosya Kullanılıyor** hatası alırsanız bu, hizmeti doğru şekilde kaldırmadığınız anlamına gelmektedir.  

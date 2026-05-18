@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+                      "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+    GoodbyeDPI-Turkey macOS launchd LaunchDaemon template.
+    Rendered by macos/scripts/_lib.sh::render_plist before being copied to
+    /Library/LaunchDaemons/. See that function for the placeholder format.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>@LABEL@</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>@CIADPI@</string>
+<!-- ARGS_PLACEHOLDER -->
+    </array>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>ProcessType</key>
+    <string>Background</string>
+
+    <key>StandardOutPath</key>
+    <string>/var/log/goodbyedpi-turkey.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/var/log/goodbyedpi-turkey.log</string>
+</dict>
+</plist>
