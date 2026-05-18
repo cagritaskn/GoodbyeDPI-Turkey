@@ -62,6 +62,26 @@ fi
 cp -f "$BYEDPI_DIR/ciadpi" "$BIN_DIR/ciadpi"
 chmod +x "$BIN_DIR/ciadpi"
 
+# IMPORTANT (Apple Silicon especially): clang writes an "adhoc,linker-signed"
+# code signature on the freshly compiled binary. That signature is brittle:
+# `cp` produces a byte-identical copy but AMFI (Apple Mobile File Integrity)
+# treats the copy's signature as invalid and SIGKILLs the process the moment
+# it tries to execute (you see "Killed: 9" in the shell, and launchd reports
+# "last exit reason = OS_REASON_CODESIGNING" for the LaunchDaemon).
+#
+# Re-signing the copy with a regular ad-hoc signature (no "linker-signed"
+# flag) avoids this. No Apple Developer account is needed — `-s -` means
+# "ad-hoc, no identity", which is what unsigned local builds use everywhere.
+if command -v codesign >/dev/null 2>&1; then
+    log "Re-signing the copy with an ad-hoc signature (Apple Silicon AMFI fix)"
+    codesign --force --sign - \
+        --identifier com.cagritaskn.goodbyedpi-turkey.ciadpi \
+        "$BIN_DIR/ciadpi"
+else
+    err "WARNING: 'codesign' not found. On Apple Silicon the binary may be"
+    err "         killed at startup with 'Killed: 9' due to invalid signature."
+fi
+
 log "Built binary: ${BIN_DIR}/ciadpi"
 "$BIN_DIR/ciadpi" --help 2>&1 | head -1 || true
 
