@@ -32,7 +32,14 @@ char *repl_str(const char *str, const char *from, const char *to) {
 	ptrdiff_t *pos_cache_tmp, *pos_cache = NULL;
 	#endif
 	size_t cache_sz = 0;
-	size_t cpylen, orglen, retlen, tolen, fromlen = strlen(from);
+	size_t cpylen, orglen, retlen, tolen, fromlen;
+
+	if (!str || !from || !to)
+		goto end_repl_str;
+
+	fromlen = strlen(from);
+	if (fromlen == 0)
+		goto end_repl_str;
 
 	/* Find all matches and cache their positions. */
 	while ((pstr2 = strstr(pstr, from)) != NULL) {
@@ -60,7 +67,17 @@ char *repl_str(const char *str, const char *from, const char *to) {
 	/* Allocate memory for the post-replacement string. */
 	if (count > 0) {
 		tolen = strlen(to);
-		retlen = orglen + (tolen - fromlen) * count;
+		if (tolen >= fromlen) {
+			size_t delta = tolen - fromlen;
+			if (delta > 0 && delta > (SIZE_MAX - orglen) / count)
+				goto end_repl_str;
+			retlen = orglen + delta * count;
+		} else {
+			size_t delta = fromlen - tolen;
+			if (delta > orglen / count)
+				goto end_repl_str;
+			retlen = orglen - delta * count;
+		}
 	} else	retlen = orglen;
 	ret = malloc(retlen + 1);
 	if (ret == NULL) {
