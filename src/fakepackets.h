@@ -29,5 +29,8 @@ int fake_load_from_hex(const char *data);
 // Create a fake TLS ClientHello packet with specified SNI (Server Name Indication)
 int fake_load_from_sni(const char *domain_name);
 
+// Clear loaded fake packet templates and free associated memory
+void fake_clear(void);
+
 // Generate random fake packets for testing or evasion
 int fake_load_random(unsigned int count, unsigned int maxsize);

@@ -43,10 +43,16 @@ static int add_hostname(const char *host) {
         return FALSE;
 
     blackwhitelist_record_t *tmp_record = malloc(sizeof(blackwhitelist_record_t));
+    if (!tmp_record)
+        return FALSE;
     char *host_c = NULL;
 
     if (!check_get_hostname(host)) {
         host_c = strdup(host);
+        if (!host_c) {
+            free(tmp_record);
+            return FALSE;
+        }
         tmp_record->host = host_c;
         HASH_ADD_KEYPTR(hh, blackwhitelist, tmp_record->host,
                         strlen(tmp_record->host), tmp_record);
@@ -64,13 +70,18 @@ static int add_hostname(const char *host) {
  * Load a list of hostnames from a file into the blackwhitelist
  */
 int blackwhitelist_load_list(const char *filename) {
-    char *line = malloc(HOST_MAXLEN + 1);
     size_t linelen = HOST_MAXLEN + 1;
     int cnt = 0;
     ssize_t read;
 
     FILE *fp = fopen(filename, "r");
     if (!fp) return FALSE;
+
+    char *line = malloc(HOST_MAXLEN + 1);
+    if (!line) {
+        fclose(fp);
+        return FALSE;
+    }
 
     while ((read = getline(&line, &linelen, fp)) != -1) {
         /* works with both \n and \r\n */
@@ -120,4 +131,14 @@ int blackwhitelist_check_hostname(const char *host_addr, size_t host_len) {
 
     debug("____blackwhitelist_check_hostname FALSE: host %s\n", current_host);
     return FALSE;
+}
+
+void blackwhitelist_clear(void) {
+    blackwhitelist_record_t *tmp_record, *tmp_record2;
+    HASH_ITER(hh, blackwhitelist, tmp_record, tmp_record2) {
+        HASH_DEL(blackwhitelist, tmp_record);
+        free((char*)tmp_record->host);
+        free(tmp_record);
+    }
+    blackwhitelist = NULL;
 }
