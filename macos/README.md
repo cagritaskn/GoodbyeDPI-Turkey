@@ -93,6 +93,32 @@ sudo launchctl print system/com.cagritaskn.goodbyedpi-turkey
 tail -f /var/log/goodbyedpi-turkey.log
 ```
 
+## Split tunnel — sadece belirli siteleri ciadpi'den geçirme
+
+Yukarıdaki scripts'ler sistem geneli SOCKS proxy'si kurar, yani **tüm** TLS
+trafiği desync'ten geçer. Bu, engelli olmayan siteleri de bozabilir: bölünmüş
+ClientHello'yu reddeden sunucular olur (`sahibinden.com` → `sslv3 alert
+illegal parameter`, `vercel.com` → timeout).
+
+`split_tunnel.sh`, sistem geneli SOCKS ayarını bir PAC dosyasıyla değiştirir;
+sadece `macos/split-tunnel-domains.txt` içindeki domainler ciadpi'ye gider,
+kalan her şey doğrudan bağlanır. Bir `service_install_*` scripti kurduktan
+sonra çalıştırın:
+
+```bash
+sudo ./macos/scripts/split_tunnel.sh on      # PAC'a geç
+sudo ./macos/scripts/split_tunnel.sh status  # servis servis mevcut durum
+sudo ./macos/scripts/split_tunnel.sh off     # sistem geneli SOCKS'a dön
+```
+
+Domain listesi ilk çalıştırmada `/usr/local/etc/goodbyedpi-turkey/` altına
+kopyalanır; listeyi orada düzenleyip tekrar `on` çalıştırın. Bir sitenin
+gerçekten engelli olup olmadığını `curl -s -o /dev/null -w "%{http_code}"
+--noproxy '*' https://site` ile kontrol edin — `000` dönüyorsa listeye ekleyin.
+
+DNS ayarı değişmez: ISS resolver'ı `discord.com`'u engel IP'sine çözdüğü için
+Yandex DNS split tunnel modunda da gereklidir.
+
 ## Yöntem ↔ Argüman Eşlemesi
 
 | Yöntem (Windows)                          | Windows args                       | macOS byedpi args                                          | DNS         |
