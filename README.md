@@ -2,6 +2,8 @@
 [![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey.svg)](https://www.microsoft.com/windows)
 [![Downloads](https://img.shields.io/github/downloads/cagritaskn/GoodbyeDPI-Turkey/total.svg)](https://github.com/cagritaskn/GoodbyeDPI-Turkey/releases/)
 
+**Türkçe** | [English](README-EN.md)
+
 # SplitWire-Turkey Hakkında Önemli Not (29.07.2025)
 >
 > [!IMPORTANT]
@@ -40,10 +42,34 @@ Bu geliştirici tamamen ücretsiz şekilde yayınladığı bu kütüphaneden hi�
 
 ## GoodbyeDPI'ı Kullanmak
 
-GoodbyeDPI'ın Türkiye fork'unu kullanmak için iki yöntem bulunmaktadır.
+GoodbyeDPI'ın Türkiye fork'unu kullanmak için üç yöntem bulunmaktadır.
 
+- **Kontrol Paneli ile kullanma (Önerilen):** Tek tıkla aç/kapa yapabileceğiniz, metod seçebileceğiniz Türkçe/İngilizce bir arayüz. Detaylar aşağıda.
 - Hizmet kurarak kullanma: Yalnızca bir kez hizmeti kurup ardından elle herhangi bir şey çalıştırmaya gerek kalmaksızın bilgisayarınız her yeniden başlatıldığında otomatik olarak çalışır.
 - Batch dosyası ile kullanma: batch dosyası ile kullanmada her defasında elle batch dosyasını başlatarak kullanmanız gerekir (batch penceresi kapatıldığında GoodbyeDPI kullanımına son verilir).
+
+## GoodbyeDPI Kontrol Paneli (Aç/Kapa Arayüzü)
+
+`GoodbyeDPI-Kontrol.cmd` dosyası, GoodbyeDPI'ı **tek tıkla açıp kapatabileceğiniz** iki dilli (Türkçe/İngilizce) bir kontrol panelidir. Ayrı ayrı `.cmd` dosyalarını çalıştırmanıza gerek kalmadan, servisi arayüzden yönetirsiniz.
+
+**Özellikler:**
+
+- **Aç/Kapa düğmesi:** GoodbyeDPI servisini tek tıkla başlatır veya durdurur (yeşil = açık, kırmızı = kapatmak için).
+- **Metod seçici:** Fork ile gelen 7 yöntemin (ana metod + 6 SuperOnline alternatifi) hepsi bir açılır listeden seçilebilir. Servis çalışırken metodu değiştirirseniz otomatik olarak yeni metotla yeniden kurulur.
+- **Dil düğmesi:** Sağ üstteki `EN`/`TR` düğmesiyle arayüz dili anında değişir. İlk açılışta Windows dilinize göre otomatik seçilir.
+- **Servisi yeniden kur / kaldır:** Servisi elle yeniden kurmak veya tamamen kaldırmak için alttaki düğmeler.
+- **Yönetici yükseltmesi:** Yönetici değilseniz otomatik olarak yönetici izni ister.
+- **Mimari algılama:** 32-bit (x86) ve 64-bit (x86_64) Windows'u otomatik algılar; Windows 7/8/8.1/10/11 üzerinde çalışır.
+- Seçtiğiniz metod ve dil `GoodbyeDPI-Kontrol.config.json` dosyasına kaydedilir; bir sonraki açılışta hatırlanır.
+
+**Kullanımı:**
+
+- `GoodbyeDPI-Kontrol.cmd` dosyasına çift tıklayın (yönetici izni otomatik istenir).
+- Listeden ISS'nize uygun metodu seçin (bilmiyorsanız "Önerilen - Ana metod" ile başlayın).
+- Büyük düğmeye basarak GoodbyeDPI'ı açın.
+
+> [!NOTE]
+> DNS ayarlamayan metotlarda (Alt 1, 2, 6) arayüz sizi uyarır: Windows DNS'inizi elle Yandex (77.88.8.8) yapmanız gerekir. Yandex DNS önayarlı metotlarda (Ana, Alt 3, 4, 5) buna gerek yoktur.
 
 > [!NOTE]
 > İndirdiğiniz ZIP dosyasını çıkarttığınız konumdan taşımayın. Kurulacak hizmet .cmd dosyasını çalıştırdığınız dosya yolunu kullanacağından eğer dosyaları taşırsanız hizmet çalışmayacaktır. (Tavsiyem sizi rahatsız etmeyecek bir konuma ZIP dosyasını çıkarmanız ve dosyaları orada saklamanız. Örneğin, ``C:\GoodbyeDPI\``.)
