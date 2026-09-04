@@ -1,2 +1,6 @@
 *.o
 *.exe
+
+# GoodbyeDPI Control Panel runtime files
+GoodbyeDPI-Kontrol.log
+GoodbyeDPI-Kontrol.config.json
