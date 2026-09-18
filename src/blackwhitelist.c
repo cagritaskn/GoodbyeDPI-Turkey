@@ -42,21 +42,20 @@ static int add_hostname(const char *host) {
     if (!host)
         return FALSE;
 
-    blackwhitelist_record_t *tmp_record = malloc(sizeof(blackwhitelist_record_t));
-    char *host_c = NULL;
-
     if (!check_get_hostname(host)) {
-        host_c = strdup(host);
-        tmp_record->host = host_c;
-        HASH_ADD_KEYPTR(hh, blackwhitelist, tmp_record->host,
-                        strlen(tmp_record->host), tmp_record);
-        debug("Added host %s\n", host_c);
-        return TRUE;
+        char *host_c = strdup(host);
+        blackwhitelist_record_t *tmp_record = malloc(sizeof(blackwhitelist_record_t));
+        if (host_c && tmp_record) {
+            tmp_record->host = host_c;
+            HASH_ADD_KEYPTR(hh, blackwhitelist, tmp_record->host,
+                            strlen(tmp_record->host), tmp_record);
+            debug("Added host %s\n", host_c);
+            return TRUE;
+        }
+        free(host_c);
+        free(tmp_record);
     }
     debug("Not added host %s\n", host);
-    free(tmp_record);
-    if (host_c)
-        free(host_c);
     return FALSE;
 }
 
@@ -70,7 +69,11 @@ int blackwhitelist_load_list(const char *filename) {
     ssize_t read;
 
     FILE *fp = fopen(filename, "r");
-    if (!fp) return FALSE;
+    if (!fp || !line) {
+        if (fp) fclose(fp);
+        free(line);
+        return FALSE;
+    }
 
     while ((read = getline(&line, &linelen, fp)) != -1) {
         /* works with both \n and \r\n */
@@ -88,9 +91,9 @@ int blackwhitelist_load_list(const char *filename) {
             cnt++;
     }
     free(line);
+    fclose(fp);
     if (!blackwhitelist) return FALSE;
     printf("Loaded %d hosts from file %s\n", cnt, filename);
-    fclose(fp);
     return TRUE;
 }
 
@@ -102,11 +105,10 @@ int blackwhitelist_check_hostname(const char *host_addr, size_t host_len) {
     char current_host[HOST_MAXLEN + 1];
     char *tokenized_host = NULL;
 
-    if (host_len > HOST_MAXLEN) return FALSE;
-    if (host_addr && host_len) {
-        memcpy(current_host, host_addr, host_len);
-        current_host[host_len] = '\0';
-    }
+    if (host_len > HOST_MAXLEN || !host_addr || !host_len) return FALSE;
+
+    memcpy(current_host, host_addr, host_len);
+    current_host[host_len] = '\0';
 
     if (check_get_hostname(current_host))
             return TRUE;

@@ -30,11 +30,21 @@ int service_register(int argc, char *argv[])
      */
     // Save command line arguments to use them later in service_main
     if (!service_argc && !service_argv) {
-        service_argc = argc;
-        service_argv = calloc((size_t)(argc + 1), sizeof(void*));
+        char **service_argv_new = calloc((size_t)(argc + 1), sizeof(void*));
+        if (!service_argv_new)
+            return 0;
         for (i = 0; i < argc; i++) {
-            service_argv[i] = strdup(argv[i]);
+            service_argv_new[i] = strdup(argv[i]);
+            if (!service_argv_new[i]) {
+                for (int j = 0; j < i; j++) {
+                    free(service_argv_new[j]);
+                }
+                free(service_argv_new);
+                return 0;
+            }
         }
+        service_argc = argc;
+        service_argv = service_argv_new;
     }
 
     // Start the service control dispatcher
@@ -46,6 +56,8 @@ int service_register(int argc, char *argv[])
             free(service_argv[i]);
         }
         free(service_argv);
+        service_argc = 0;
+        service_argv = NULL;
     }
 
     return ret;

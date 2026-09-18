@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <errno.h>
 #include <signal.h>
 #include <unistd.h>
 #include <string.h>
@@ -209,6 +210,11 @@ static struct option long_options[] = {
 static char *filter_string = NULL;
 static char *filter_passive_string = NULL;
 
+static void die_oom() {
+    puts("Memory allocation error!");
+    exit(EXIT_FAILURE);
+}
+
 static void add_filter_str(int proto, int port) {
     const char *udp = " or (udp and !impostor and !loopback and " \
                       "(udp.SrcPort == %d or udp.DstPort == %d))";
@@ -219,6 +225,8 @@ static void add_filter_str(int proto, int port) {
     size_t new_filter_size = strlen(current_filter) +
             (proto == IPPROTO_UDP ? strlen(udp) : strlen(tcp)) + 16;
     char *new_filter = malloc(new_filter_size);
+    if (!new_filter)
+        die_oom();
 
     strcpy(new_filter, current_filter);
     if (proto == IPPROTO_UDP)
@@ -234,16 +242,24 @@ static void add_ip_id_str(int id) {
     char *newstr;
     const char *ipid = " or ip.Id == %d";
     char *addfilter = malloc(strlen(ipid) + 16);
+    if (!addfilter)
+        die_oom();
 
     sprintf(addfilter, ipid, id);
 
     newstr = repl_str(filter_string, IPID_TEMPLATE, addfilter);
+    if (!newstr)
+        die_oom();
     free(filter_string);
     filter_string = newstr;
 
     newstr = repl_str(filter_passive_string, IPID_TEMPLATE, addfilter);
+    if (!newstr)
+        die_oom();
     free(filter_passive_string);
     filter_passive_string = newstr;
+
+    free(addfilter);
 }
 
 static void add_maxpayloadsize_str(unsigned short maxpayload) {
@@ -254,24 +270,34 @@ static void add_maxpayloadsize_str(unsigned short maxpayload) {
           "or tcp.Payload32[0] == 0x47455420 or tcp.Payload32[0] == 0x504F5354 " \
           "or (tcp.Payload[0] == 0x16 and tcp.Payload[1] == 0x03 and tcp.Payload[2] <= 0x03): true)";
     char *addfilter = malloc(strlen(maxpayloadsize_str) + 16);
+    if (!addfilter)
+        die_oom();
 
     sprintf(addfilter, maxpayloadsize_str, maxpayload);
 
     newstr = repl_str(filter_string, MAXPAYLOADSIZE_TEMPLATE, addfilter);
+    if (!newstr)
+        die_oom();
     free(filter_string);
     filter_string = newstr;
+
+    free(addfilter);
 }
 
 static void finalize_filter_strings() {
     char *newstr, *newstr2;
 
     newstr2 = repl_str(filter_string, IPID_TEMPLATE, "");
-    newstr = repl_str(newstr2, MAXPAYLOADSIZE_TEMPLATE, "");
+    newstr = newstr2 ? repl_str(newstr2, MAXPAYLOADSIZE_TEMPLATE, "") : NULL;
+    if (!newstr)
+        die_oom();
     free(filter_string);
     free(newstr2);
     filter_string = newstr;
 
     newstr = repl_str(filter_passive_string, IPID_TEMPLATE, "");
+    if (!newstr)
+        die_oom();
     free(filter_passive_string);
     filter_passive_string = newstr;
 }
@@ -291,12 +317,20 @@ static char* dumb_memmem(const char* haystack, unsigned int hlen,
 }
 
 unsigned short int atousi(const char *str, const char *msg) {
-    long unsigned int res = strtoul(str, NULL, 10u);
+    char *endptr = NULL;
+    long unsigned int res;
     enum {
         limitValue=0xFFFFu
     };
 
-    if(res > limitValue) {
+    if (!str || !*str) {
+        puts(msg);
+        exit(ERROR_ATOUSI);
+    }
+
+    errno = 0;
+    res = strtoul(str, &endptr, 10u);
+    if (errno == ERANGE || !endptr || *endptr != '\0' || res > limitValue) {
         puts(msg);
         exit(ERROR_ATOUSI);
     }
@@ -304,12 +338,20 @@ unsigned short int atousi(const char *str, const char *msg) {
 }
 
 BYTE atoub(const char *str, const char *msg) {
-    long unsigned int res = strtoul(str, NULL, 10u);
+    char *endptr = NULL;
+    long unsigned int res;
     enum {
         limitValue=0xFFu
     };
 
-    if(res > limitValue) {
+    if (!str || !*str) {
+        puts(msg);
+        exit(ERROR_AUTOB);
+    }
+
+    errno = 0;
+    res = strtoul(str, &endptr, 10u);
+    if (errno == ERANGE || !endptr || *endptr != '\0' || res > limitValue) {
         puts(msg);
         exit(ERROR_AUTOB);
     }
@@ -458,7 +500,7 @@ static int extract_sni(const char *pktdata, unsigned int pktlen,
             */
             d[ptr+3] - d[ptr+5] == 2 && d[ptr+5] - d[ptr+8] == 3)
             {
-                if (ptr + 8 + d[ptr+8] > pktlen) {
+                if (ptr + 9 + d[ptr+8] > pktlen) {
                     return FALSE;
                 }
                 hnaddr = &d[ptr+9];
@@ -672,10 +714,16 @@ int main(int argc, char *argv[]) {
         running_from_service = 0;
     }
 
-    if (filter_string == NULL)
+    if (filter_string == NULL) {
         filter_string = strdup(FILTER_STRING_TEMPLATE);
-    if (filter_passive_string == NULL)
+        if (!filter_string)
+            die_oom();
+    }
+    if (filter_passive_string == NULL) {
         filter_passive_string = strdup(FILTER_PASSIVE_STRING_TEMPLATE);
+        if (!filter_passive_string)
+            die_oom();
+    }
 
     printf(
         "GoodbyeDPI " GOODBYEDPI_VERSION
