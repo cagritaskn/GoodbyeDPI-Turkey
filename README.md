@@ -4,8 +4,9 @@
 
 > **macOS desteği:** Bu fork artık macOS'ta da çalışır (Intel ve Apple Silicon).
 > Hızlı başlangıç için **[`macOS Kullanıcıları İçin`](https://github.com/cagritaskn/GoodbyeDPI-Turkey#macos-kullan%C4%B1c%C4%B1lar%C4%B1-i%CC%87%C3%A7in)** başlığını ziyaret edebilirsiniz.
+
 > Detaylı kurulum ve kullanım talimatları için **[`macos/README.md`](macos/README.md)** dosyasına bakın.
-> Aşağıdaki Windows talimatları aynen geçerlidir; her iki platform tek depoda yan yana barınır.
+
 
 # SplitWire-Turkey Hakkında Önemli Not (29.07.2025)
 >
