@@ -8,7 +8,12 @@ echo DNS zorlamasini kaldiracak hizmeti yuklemek icin: (Alternatif Metod 4)
 echo Bu batch dosyasini yonetici olarak calistirmaniz gerekmektedir.
 echo Sag Tik - Yonetici Olarak Calistir.
 echo Eger yonetici olarak calistirdiysaniz herhangi bir tusa basin.
-pause
+net session >nul 2>&1
+if not %errorLevel%==0 (
+    echo Yonetici hakki yok. Sag tik, Yonetici olarak calistir.
+    pause
+    exit /b 1
+)
 sc stop "GoodbyeDPI"
 sc delete "GoodbyeDPI"
 sc create "GoodbyeDPI" binPath= "\"%CD%\%_arch%\goodbyedpi.exe\" -5 --dns-addr 77.88.8.8 --dns-port 1253 --dnsv6-addr 2a02:6b8::feed:0ff --dnsv6-port 1253" start= "auto"

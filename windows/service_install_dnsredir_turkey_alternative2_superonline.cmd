@@ -10,7 +10,12 @@ echo Sag Tik - Yonetici Olarak Calistir.
 echo Eger yonetici olarak calistirdiysaniz herhangi bir tusa basin.
 echo Bu pencere kapandiktan sonra Windows ayarlarindan DNS degistirmeyi unutmayin.
 echo DNS degisikliginin ardindan bilgisayarinizi yeniden baslatin.
-pause
+net session >nul 2>&1
+if not %errorLevel%==0 (
+    echo Yonetici hakki yok. Sag tik, Yonetici olarak calistir.
+    pause
+    exit /b 1
+)
 sc stop "GoodbyeDPI"
 sc delete "GoodbyeDPI"
 sc create "GoodbyeDPI" binPath= "\"%CD%\%_arch%\goodbyedpi.exe\" -5" start= "auto"
