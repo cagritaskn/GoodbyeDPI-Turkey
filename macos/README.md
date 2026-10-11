@@ -119,6 +119,69 @@ gerçekten engelli olup olmadığını `curl -s -o /dev/null -w "%{http_code}"
 DNS ayarı değişmez: ISS resolver'ı `discord.com`'u engel IP'sine çözdüğü için
 Yandex DNS split tunnel modunda da gereklidir.
 
+## ISS harici DNS'i engelliyorsa (internet kopuyor / Discord "Update failed")
+
+Bazı bağlantılarda ISS, harici DNS sunucularına giden 53. port trafiğini
+(UDP ve TCP) tamamen engeller. Bu durumda Yandex DNS kullanan yöntemler
+çalıştığı anda hiçbir alan adı çözülemez; ciadpi çıktısında
+`not resolved: cdn.discordapp.com` gibi satırlar görülür ve internet kopmuş
+gibi olur. DNS'e dokunmayan yöntemler de işe yaramaz, çünkü ISS resolver'ı
+`discord.com` için engel IP'si döndürür.
+
+Kontrol etmek için (ilki zaman aşımına uğruyor, ikincisi `195.175.254.2`
+gibi bir engel IP'si döndürüyorsa bu durumdasınız):
+
+```bash
+dig +short discord.com @77.88.8.8
+dig +short discord.com
+```
+
+Çözüm, DNS sorgularını HTTPS üzerinden gönderen yerel bir resolver
+kullanmaktır:
+
+```bash
+brew install dnscrypt-proxy
+```
+
+`/opt/homebrew/etc/dnscrypt-proxy.toml` (Intel Mac'lerde `/usr/local/etc/`)
+içinde şu ayarları yapın:
+
+```toml
+server_names = ['cloudflare', 'google']
+ignore_system_dns = false
+cloaking_rules = '/opt/homebrew/etc/dnscrypt-cloaking-rules.txt'
+```
+
+`/opt/homebrew/etc/dnscrypt-cloaking-rules.txt` dosyasını şu içerikle
+oluşturun:
+
+```
+=updates.discord.com 127.0.0.1
+```
+
+Ardından servisi başlatın:
+
+```bash
+sudo brew services start dnscrypt-proxy
+dig +short discord.com @127.0.0.1          # gerçek IP'ler (162.159.x.x)
+dig +short updates.discord.com @127.0.0.1  # 127.0.0.1
+```
+
+`dnscrypt-proxy` çalışırken `turkey_dnsredir*.sh` scripts'leri Yandex DNS
+yerine otomatik olarak `127.0.0.1` kullanır.
+
+**Cloaking kuralı neden gerekli?** Discord'un güncelleyicisi sistem proxy'sini
+ve `HTTPS_PROXY` gibi ortam değişkenlerini yok sayıp `updates.discord.com`
+adresine doğrudan bağlanır; DPI bağlantıyı sıfırlar ve Discord
+"Update failed — retrying" ekranında kalır. Tek seferlik scripts'ler bu
+yüzden `sni_forward.py` yönlendiricisini de başlatır: 127.0.0.1:443'e gelen
+bağlantının TLS SNI alanını okur ve akışı değiştirmeden ciadpi üzerinden
+gerçek sunucuya aktarır. Proxy'yi yok sayan başka bir alan adı için cloaking
+dosyasına bir satır eklemeniz yeterlidir.
+
+Sınırlamalar: 443. portu başka bir yerel sunucu kullanıyorsa yönlendirici
+başlayamaz; `service_install_*` scripts'leri yönlendiriciyi henüz başlatmaz.
+
 ## Yöntem ↔ Argüman Eşlemesi
 
 | Yöntem (Windows)                          | Windows args                       | macOS byedpi args                                          | DNS         |
@@ -163,6 +226,11 @@ sudo networksetup -setdnsservers              "Wi-Fi" Empty
   (örn. Chrome belirli sürümler, bazı oyunlar) sistem proxy'sini yok sayar.
   Bu durumda söz konusu uygulamanın ayarlarından proxy'yi elle
   `127.0.0.1:1080` olarak ayarlamanız gerekebilir.
+- **`bind: Address already in use`**: Önceki çalıştırmadan kalan bir ciadpi
+  portu tutuyordur. Tek seferlik scripts'ler artık başlarken bunu kendisi
+  kapatır; elle kapatmak için `sudo pkill -9 -x ciadpi`.
+- **Script çalışınca internet kopuyor veya Discord "Update failed" diyor**:
+  Yukarıdaki "ISS harici DNS'i engelliyorsa" bölümüne bakın.
 - **DNS sızıntısı**: SOCKS5 default olarak DNS sorgularını uzaktan çözer ama
   bazı uygulamalar DNS'i kendi başına yapar. Bu yüzden script default yöntemde
   sistem DNS'ini Yandex'e ayarlar.

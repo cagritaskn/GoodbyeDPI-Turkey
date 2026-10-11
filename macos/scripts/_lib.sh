@@ -167,6 +167,13 @@ clear_proxy() {
 
 apply_dns() {
     local service="$1"
+    # Some ISPs block every external resolver on port 53, which makes Yandex
+    # DNS unreachable. If a local encrypted resolver (dnscrypt-proxy) is
+    # running, use it instead.
+    if pgrep -x dnscrypt-proxy >/dev/null 2>&1; then
+        DEFAULT_DNS_V4_PRIMARY="127.0.0.1"
+        DEFAULT_DNS_V4_SECONDARY="127.0.0.1"
+    fi
     log "DNS sunucuları ayarlanıyor: ${service} -> ${DEFAULT_DNS_V4_PRIMARY} ${DEFAULT_DNS_V4_SECONDARY}"
     /usr/sbin/networksetup -setdnsservers "$service" \
         "$DEFAULT_DNS_V4_PRIMARY" "$DEFAULT_DNS_V4_SECONDARY"
@@ -182,6 +189,19 @@ clear_dns() {
 
 # Restore state recorded by save_network_state(). Safe to call multiple times.
 cleanup_and_restore() {
+    # Make sure the ciadpi we started does not outlive us (e.g. when the
+    # terminal window is closed) and keep holding the port.
+    if [[ -n "${CIADPI_PID:-}" ]]; then
+        kill -TERM "$CIADPI_PID" 2>/dev/null || true
+        sleep 1
+        kill -KILL "$CIADPI_PID" 2>/dev/null || true
+        CIADPI_PID=""
+    fi
+    if [[ -n "${SNI_FORWARD_PID:-}" ]]; then
+        kill -TERM "$SNI_FORWARD_PID" 2>/dev/null || true
+        SNI_FORWARD_PID=""
+    fi
+
     if [[ ! -f "$STATE_FILE" ]]; then
         return 0
     fi
@@ -307,13 +327,43 @@ run_method_oneshot() {
     save_network_state "$service"
     install_cleanup_trap
 
+    # A ciadpi left over from an earlier run would keep the port busy.
+    stop_stale_processes
+
     apply_proxy "$service"
     if [[ "$(method_dns_mode "$method")" == "yandex" ]]; then
         apply_dns "$service"
     fi
+    start_sni_forward
 
     # shellcheck disable=SC2046
     start_ciadpi_foreground $(method_args "$method")
+}
+
+stop_stale_processes() {
+    # A ciadpi owned by the launchd service is not stale; leave it alone.
+    if launchctl print "system/${LAUNCHD_LABEL}" >/dev/null 2>&1; then
+        return 0
+    fi
+    if pgrep -x ciadpi >/dev/null 2>&1; then
+        warn "Önceki çalıştırmadan kalan ciadpi kapatılıyor..."
+        pkill -KILL -x ciadpi 2>/dev/null || true
+    fi
+    pkill -f "${_LIB_DIR}/sni_forward.py" 2>/dev/null || true
+    sleep 1
+}
+
+# Discord's updater ignores the system proxy. sni_forward.py relays
+# connections for hostnames that the local resolver points at 127.0.0.1
+# (see macos/README.md) through ciadpi.
+start_sni_forward() {
+    if ! command -v python3 >/dev/null 2>&1; then
+        warn "python3 bulunamadı; SNI yönlendirici başlatılmadı."
+        return 0
+    fi
+    log "SNI yönlendirici başlatılıyor: 127.0.0.1:443 -> ${CIADPI_HOST}:${CIADPI_PORT}"
+    python3 "${_LIB_DIR}/sni_forward.py" 443 "$CIADPI_PORT" >/dev/null 2>&1 &
+    SNI_FORWARD_PID=$!
 }
 
 # ---- launchd service helpers ----------------------------------------------
@@ -444,7 +494,8 @@ start_ciadpi_foreground() {
     log "Ctrl-C veya pencereyi kapatmak GoodbyeDPI-Turkey'i durdurur."
     "$CIADPI_BIN" -i "$CIADPI_HOST" -p "$CIADPI_PORT" "$@" &
     local pid=$!
-    # Forward SIGINT/SIGTERM to the child so it shuts down gracefully.
-    trap 'kill -TERM '"$pid"' 2>/dev/null || true' INT TERM
+    CIADPI_PID="$pid"
+    # Forward SIGINT/SIGTERM/SIGHUP to the child so it shuts down gracefully.
+    trap 'kill -TERM '"$pid"' 2>/dev/null || true' INT TERM HUP
     wait "$pid"
 }
