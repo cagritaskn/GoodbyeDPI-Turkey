@@ -38,9 +38,9 @@ LAUNCHD_TEMPLATE="${MACOS_DIR}/launchd/${LAUNCHD_LABEL}.plist.template"
 CIADPI_HOST="${CIADPI_HOST:-127.0.0.1}"
 CIADPI_PORT="${CIADPI_PORT:-1080}"
 
-# Yandex DNS (matches the Windows scripts' --dns-addr 77.88.8.8 default).
-DEFAULT_DNS_V4_PRIMARY="${DEFAULT_DNS_V4_PRIMARY:-77.88.8.8}"
-DEFAULT_DNS_V4_SECONDARY="${DEFAULT_DNS_V4_SECONDARY:-77.88.8.1}"
+# Quad9 DNS (matches the Windows scripts' --dns-addr 9.9.9.9 default).
+DEFAULT_DNS_V4_PRIMARY="${DEFAULT_DNS_V4_PRIMARY:-9.9.9.9}"
+DEFAULT_DNS_V4_SECONDARY="${DEFAULT_DNS_V4_SECONDARY:-149.112.112.112}"
 
 # ---- logging ---------------------------------------------------------------
 
@@ -241,7 +241,7 @@ install_cleanup_trap() {
 # split) maps cleanly to `--split 1+s --tlsrec 1+s`.
 #
 # DNS_MODE = "yandex"  -> force the system DNS to Yandex (matches the
-#                         Windows scripts that pass --dns-addr 77.88.8.8).
+#                         Windows scripts that pass --dns-addr 9.9.9.9).
 # DNS_MODE = "off"     -> leave DNS untouched (mirrors the Windows scripts
 #                         that do NOT pass --dns-addr).
 #
@@ -358,7 +358,7 @@ render_plist() {
 }
 
 # Install (or replace) the launchd service for the given method, then start
-# it. Also applies the system-wide SOCKS proxy + (optionally) Yandex DNS so
+# it. Also applies the system-wide SOCKS proxy + (optionally) Quad9 DNS so
 # that the service is actually used by applications.
 # Args: $1 = method name
 run_method_service_install() {
