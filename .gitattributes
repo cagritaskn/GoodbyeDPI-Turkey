@@ -1,0 +1,6 @@
+# Shell scripts must keep LF endings, or bash fails on checkouts made with
+# core.autocrlf=true (Windows clones used from WSL).
+*.sh text eol=lf
+linux/Makefile text eol=lf
+linux/systemd/* text eol=lf
+linux/split-tunnel-domains.txt text eol=lf

@@ -1,11 +1,13 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS-lightgrey.svg)](#)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)](#)
 [![Downloads](https://img.shields.io/github/downloads/cagritaskn/GoodbyeDPI-Turkey/total.svg)](https://github.com/cagritaskn/GoodbyeDPI-Turkey/releases/)
 
 > **macOS desteği:** Bu fork artık macOS'ta da çalışır (Intel ve Apple Silicon).
 > Hızlı başlangıç için **[`macOS Kullanıcıları İçin`](https://github.com/cagritaskn/GoodbyeDPI-Turkey#macos-kullan%C4%B1c%C4%B1lar%C4%B1-i%CC%87%C3%A7in)** başlığını ziyaret edebilirsiniz.
 
 > Detaylı kurulum ve kullanım talimatları için **[`macos/README.md`](macos/README.md)** dosyasına bakın.
+
+> **Linux desteği:** Linux (WSL 2 dahil) için **[`linux/README.md`](linux/README.md)** dosyasına bakın.
 
 
 # SplitWire-Turkey Hakkında Önemli Not (29.07.2025)
@@ -110,6 +112,22 @@ sudo ./macos/scripts/service_install_dnsredir_turkey.sh
 
 # 4. Hizmeti kaldırma + ağ ayarlarını eski haline döndürme
 sudo ./macos/scripts/service_remove.sh
+```
+
+## Linux Kullanıcıları İçin
+
+> [!NOTE]
+> Linux sürümü de macOS gibi **byedpi (`ciadpi`)** kullanır, ancak SOCKS
+> proxy yerine **transparent proxy** olarak çalışır: nftables TCP 80/443
+> trafiğini ciadpi'ye yönlendirir, böylece proxy ayarı olmayan programlar da
+> kapsanır. Yöntemler macOS ile aynıdır. Detaylar, split tunnel ve Docker /
+> WSL kullanımı için **[`linux/README.md`](linux/README.md)**.
+
+```bash
+./linux/build.sh                                            # ciadpi'yi derler
+sudo ./linux/scripts/turkey_dnsredir.sh                     # tek seferlik (Ctrl-C ile geri alınır)
+sudo ./linux/scripts/service_install_dnsredir_turkey.sh     # systemd hizmeti
+sudo ./linux/scripts/service_remove.sh                      # kaldırma
 ```
 
 ## Sık Karşılaşılan Sorunlar

@@ -1,0 +1,5 @@
+# Domains routed through ciadpi in split-tunnel mode. One per line;
+# a bare domain also matches its subdomains. Everything else goes direct.
+discord.com
+discordapp.com
+discord.gg
