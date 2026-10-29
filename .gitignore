@@ -6,3 +6,7 @@ macos/bin/
 macos/third_party/byedpi/
 macos/launchd/com.cagritaskn.goodbyedpi-turkey.plist
 .DS_Store
+
+# Linux build outputs
+linux/bin/
+linux/third_party/byedpi/
