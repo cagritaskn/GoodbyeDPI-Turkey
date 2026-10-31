@@ -6,7 +6,47 @@
 > Hızlı başlangıç için **[`macOS Kullanıcıları İçin`](https://github.com/cagritaskn/GoodbyeDPI-Turkey#macos-kullan%C4%B1c%C4%B1lar%C4%B1-i%CC%87%C3%A7in)** başlığını ziyaret edebilirsiniz.
 
 > Detaylı kurulum ve kullanım talimatları için **[`macos/README.md`](macos/README.md)** dosyasına bakın.
+>
+> **Linux desteği:** Linux için hızlı başlangıç ve yöntem tablosu: **[`linux/README.md`](linux/README.md)**.
 
+## Linux Kullanıcıları İçin
+
+Linux tarafı `linux/` dizinindedir. Windows'un WinDivert sürücüsünün Linux'ta karşılığı olmadığı için bu port, kullanıcı alanında çalışan **byedpi (`ciadpi`)** SOCKS5 proxy'sini ve Linux'a özgü `--fake`, `--md5sig`, `--disorder` tekniklerini kullanır. VPN değildir: trafiğiniz başka ülkeye taşınmaz, paketler yerel proxy üzerinden yeniden düzenlenir.
+
+### Gereksinimler
+
+Linux + `systemd`, derleme için `git` / `make` / `gcc`, ve `sudo` yetkisi.
+
+### Derleme
+
+`cd linux && ./build.sh` — çıktı: `linux/bin/ciadpi`.
+
+### Sudo şifresi: gerçek terminal şart
+
+Betikler root ister ve `sudo` şifresi yalnızca gerçek bir terminal penceresinde sorulabilir. Komutu Orca, IDE veya ajan terminalinden çalıştırırsanız "terminal gereklidir" hatası alırsınız; üst üste 3 denemede hesap `pam_faillock` ile yaklaşık 10 dakika kilitlenir.
+Doğru sıra: gerçek bir terminal açın, `cd linux` yapın, `sudo -v` ile şifreyi bir kez girin ve ardından komutu çalıştırın.
+
+### Tek seferlik kullanım
+
+Varsayılan `./scripts/turkey_dnsredir.sh`; diğer altı yöntem `./scripts/turkey_dnsredir_alternative_superonline.sh` ile `./scripts/turkey_dnsredir_alternative2_superonline.sh` … `./scripts/turkey_dnsredir_alternative6_superonline.sh` arasındadır (2, 3, 4, 5, 6 sonekleri).
+Hangisi ISS'nizde çalışıyorsa onu kullanın; Ctrl-C ile durduğunuzda ağ ayarları otomatik geri döner. Tüm betikler `linux/scripts/` altındadır.
+
+### Servis olarak kullanma
+
+`sudo ./scripts/service_install_dnsredir_turkey.sh` ile kurun, `systemctl status goodbyedpi-turkey` ve `journalctl -u goodbyedpi-turkey -f` ile izleyin, `sudo ./scripts/service_remove.sh` ile kaldırın.
+
+### Kalıntı kontrolü ve sorun giderme
+
+`systemctl is-active goodbyedpi-turkey`, `pgrep -a ciadpi`, `gsettings get org.gnome.system.proxy mode` ve `resolvectl dns <arayüz>` çıktılarına bakın. Takıldığınızda `sudo ./scripts/service_remove.sh` ile temizleyip yeniden deneyin. Yöntem tablosu ve şeffaf mod için **[`linux/README.md`](linux/README.md)**.
+
+### Güvenlik notları (kısa)
+
+- DNS varsayılan olarak Yandex'e (77.88.8.8 / 77.88.8.1) zorlanır; kapatmak için `GOODBYEDPI_DNS=off`, eski yöntem tablosu davranışı için `GOODBYEDPI_DNS=legacy`. Yandex üçüncü taraf ve şifresiz (MITM'e açık) bir çözümleyicidir.
+- Süreç root olarak çalışır ve `--fake`, `--md5sig` için `CAP_NET_RAW` ile ham soket kullanır; systemd unit'i sandbox anahtarlarıyla (`NoNewPrivileges`, `ProtectSystem=strict`, `RestrictAddressFamilies`) sınırlıdır, bir seferlik modda bu sınır yoktur.
+- `CIADPI_HOST=0.0.0.0` yapılmamalı: proxy'yi tüm ağa açar. Varsayılan `127.0.0.1:1080`.
+- Şeffaf modda IPv6 desteği `ip6tables` / `nft ip6` varlığına bağlıdır; yoksa yalnız IPv4 kuralı kurulur ve IPv6 sızıntısı olabilir.
+- byedpi belirli bir commit'e sabitlenmiştir (`BYEDPI_COMMIT`); güncellemek için önce `BYEDPI_ALLOW_UNPINNED=1 ./build.sh` ile derleyin, sonra yeni SHA'yı yazın.
+- Kalıntı bırakmamak için işiniz bittiğinde `sudo ./scripts/service_remove.sh` çalıştırın; ayrıntılar için `linux/README.md`.
 
 # SplitWire-Turkey Hakkında Önemli Not (29.07.2025)
 >

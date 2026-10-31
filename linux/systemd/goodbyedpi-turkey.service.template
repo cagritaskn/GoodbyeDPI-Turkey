@@ -1,0 +1,43 @@
+[Unit]
+Description=GoodbyeDPI Turkey (byedpi/ciadpi DPI bypass proxy)
+Documentation=https://github.com/cagritaskn/GoodbyeDPI-Turkey
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+ExecStart=@CIADPI@ @ARGS@
+Restart=on-failure
+RestartSec=3
+AmbientCapabilities=CAP_NET_RAW
+CapabilityBoundingSet=CAP_NET_RAW
+NoNewPrivileges=yes
+LimitNOFILE=4096
+ProtectSystem=strict
+# ProtectHome=yes makes /home invisible inside the unit's mount namespace, so an
+# ExecStart binary under /home dies with 203/EXEC (start-limit-hit). ciadpi only
+# reads its own binary and writes nothing, so read-only is enough.
+ProtectHome=read-only
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectProc=invisible
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallFilter=@system-service
+SystemCallArchitectures=native
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

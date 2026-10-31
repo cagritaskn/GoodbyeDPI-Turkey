@@ -6,3 +6,5 @@ macos/bin/
 macos/third_party/byedpi/
 macos/launchd/com.cagritaskn.goodbyedpi-turkey.plist
 .DS_Store
+linux/bin/
+linux/third_party/byedpi/

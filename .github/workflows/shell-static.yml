@@ -1,0 +1,70 @@
+name: Shell static checks
+
+on:
+  push:
+    paths:
+      - 'macos/**'
+      - '.github/workflows/shell-static.yml'
+  pull_request:
+    paths:
+      - 'macos/**'
+      - '.github/workflows/shell-static.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  shell-static:
+    name: Bash syntax and plist XML
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Syntax-check tracked macOS shell scripts
+        run: |
+          set -euo pipefail
+
+          mapfile -t scripts < <(git ls-files -- 'macos' | grep -E '\.sh$' || true)
+
+          if [ "${#scripts[@]}" -eq 0 ]; then
+            echo "No tracked macOS shell scripts found under macos/" >&2
+            exit 1
+          fi
+
+          echo "Checking ${#scripts[@]} script(s) with bash -n"
+          for f in "${scripts[@]}"; do
+            echo "  bash -n $f"
+            bash -n "$f"
+          done
+
+          echo "All macOS shell scripts passed bash -n"
+
+      - name: Run macOS static checks
+        run: |
+          set -euo pipefail
+
+          if [ -f macos/tests/static-checks.sh ]; then
+            echo "Running macos/tests/static-checks.sh"
+            bash macos/tests/static-checks.sh
+          else
+            echo "macos/tests/static-checks.sh not present, skipping"
+          fi
+
+      - name: Validate launchd plist template is well-formed XML
+        run: |
+          set -euo pipefail
+
+          shopt -s nullglob
+          templates=(macos/launchd/*.plist.template)
+
+          if [ "${#templates[@]}" -eq 0 ]; then
+            echo "No launchd plist template found under macos/launchd/" >&2
+            exit 1
+          fi
+
+          for plist in "${templates[@]}"; do
+            echo "  parsing $plist"
+            python3 -c 'import sys, xml.etree.ElementTree as ET; ET.parse(sys.argv[1])' "$plist"
+            echo "  OK: $plist is well-formed XML"
+          done

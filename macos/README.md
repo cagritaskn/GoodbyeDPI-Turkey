@@ -166,3 +166,20 @@ sudo networksetup -setdnsservers              "Wi-Fi" Empty
 - **DNS sızıntısı**: SOCKS5 default olarak DNS sorgularını uzaktan çözer ama
   bazı uygulamalar DNS'i kendi başına yapar. Bu yüzden script default yöntemde
   sistem DNS'ini Yandex'e ayarlar.
+
+## Doğrulama (kod değiştirmeden önce/sonra)
+
+Mac'iniz olmasa bile macOS script'lerinin sözdizimini depo kökünden
+denetleyebilirsiniz; başarılı koşunun çıktısı ve çıkış kodu şöyledir:
+
+```bash
+$ ./macos/tests/static-checks.sh
+static-checks: <N> scripts, <F> failures   # exit code 0
+```
+
+Aynı `static-checks.sh` CI'da `Shell static checks` workflow'u ile de koşar
+(`.github/workflows/shell-static.yml`; `macos/**` altına dokunan push ve PR)
+ve launchd plist şablonunu da XML olarak doğrular.
+
+Mac olmadan doğrulanamaz: `ciadpi` derlemesi (`macos/build.sh` Darwin
+dışında çıkar), `networksetup`/`launchctl` davranışı ve gerçek DPI atlatma.

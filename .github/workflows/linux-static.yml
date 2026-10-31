@@ -1,0 +1,85 @@
+name: Linux static checks
+
+on:
+  push:
+    paths:
+      - 'linux/**'
+      - '.github/workflows/linux-static.yml'
+  pull_request:
+    paths:
+      - 'linux/**'
+      - '.github/workflows/linux-static.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux-static:
+    name: Bash syntax and Makefile guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show the bash used for the checks
+        run: |
+          set -euo pipefail
+
+          bash --version | head -n 1
+          echo "No packages are installed and nothing is built by this workflow."
+
+      - name: Syntax-check tracked Linux shell scripts
+        run: |
+          set -euo pipefail
+
+          mapfile -t scripts < <(git ls-files -- 'linux' | grep -E '\.sh$' || true)
+
+          if [ "${#scripts[@]}" -eq 0 ]; then
+            echo "No tracked Linux shell scripts found under linux/" >&2
+            exit 1
+          fi
+
+          echo "Checking ${#scripts[@]} script(s) with bash -n"
+          for f in "${scripts[@]}"; do
+            echo "  bash -n $f"
+            bash -n "$f"
+          done
+
+          echo "All Linux shell scripts passed bash -n"
+
+      - name: Run Linux static checks and library tests
+        run: |
+          set -euo pipefail
+
+          if [ -f linux/tests/static-checks.sh ]; then
+            echo "Running linux/tests/static-checks.sh"
+            bash linux/tests/static-checks.sh
+          else
+            echo "linux/tests/static-checks.sh not present, skipping"
+          fi
+
+          if [ -f linux/tests/lib-test.sh ]; then
+            echo "Running linux/tests/lib-test.sh"
+            bash linux/tests/lib-test.sh
+          else
+            echo "linux/tests/lib-test.sh not present, skipping"
+          fi
+
+      - name: Guard the Linux Makefile wrapper
+        run: |
+          set -euo pipefail
+
+          cd linux
+
+          output="$(make -n build)"
+          echo "$output"
+
+          case "$output" in
+            *'./build.sh'*)
+              echo "make -n build expands to ./build.sh"
+              ;;
+            *)
+              echo "make -n build did not print ./build.sh" >&2
+              exit 1
+              ;;
+          esac
