@@ -182,6 +182,13 @@ clear_dns() {
 
 # Restore state recorded by save_network_state(). Safe to call multiple times.
 cleanup_and_restore() {
+    # ciadpi ignores SIGINT/SIGTERM on macOS (its handler calls shutdown() on
+    # the listening socket, which is ENOTCONN here), so only SIGKILL frees
+    # the port. Without this it survives as an orphan holding 1080.
+    if [[ -n "${CIADPI_PID:-}" ]]; then
+        kill -KILL "$CIADPI_PID" 2>/dev/null || true
+    fi
+
     if [[ ! -f "$STATE_FILE" ]]; then
         return 0
     fi
@@ -437,14 +444,13 @@ run_service_remove() {
 # Run ciadpi in the foreground with the supplied args.
 # The caller is expected to have arranged proxy / DNS / cleanup beforehand.
 # We deliberately do NOT exec — we run ciadpi as a child and `wait`, so that
-# the EXIT/INT/TERM trap (cleanup_and_restore) still fires when ciadpi exits
-# or the user hits Ctrl-C.
+# the EXIT trap (cleanup_and_restore) kills it and restores settings when
+# ciadpi exits, the user hits Ctrl-C, or the terminal is closed.
 start_ciadpi_foreground() {
     log "ciadpi başlatılıyor: $CIADPI_BIN -i $CIADPI_HOST -p $CIADPI_PORT $*"
     log "Ctrl-C veya pencereyi kapatmak GoodbyeDPI-Turkey'i durdurur."
     "$CIADPI_BIN" -i "$CIADPI_HOST" -p "$CIADPI_PORT" "$@" &
-    local pid=$!
-    # Forward SIGINT/SIGTERM to the child so it shuts down gracefully.
-    trap 'kill -TERM '"$pid"' 2>/dev/null || true' INT TERM
-    wait "$pid"
+    CIADPI_PID=$!
+    trap 'exit 130' INT TERM HUP
+    wait "$CIADPI_PID"
 }
