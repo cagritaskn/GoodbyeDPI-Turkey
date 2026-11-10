@@ -91,7 +91,7 @@ case "${1:-status}" in
 on)
     write_pac
     install_pac_server
-    for _ in {1..20}; do
+    for _ in {1..80}; do
         curl -sf --max-time 2 --noproxy '*' "$PAC_URL" >/dev/null 2>&1 && break
         sleep 0.25
     done
