@@ -3,3 +3,4 @@
 discord.com
 discordapp.com
 discord.gg
+discord.co
