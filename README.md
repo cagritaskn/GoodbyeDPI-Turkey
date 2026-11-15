@@ -133,6 +133,10 @@ Bu sorun genellikle fiber tarife kullanıcılarının karşılaştığı bir sor
 
 Bu forktaki komut dosyalarında varsayılan olarak **Yandex DNS** kullanılmaktadır. Farklı bir DNS kullanmak için ``turkey_dnsredir.cmd`` ve ``service_install_dnsredir_turkey.cmd`` dosyalarını herhangi bir metin düzenleyici ile düzenleyerek DNS ve port bilgilerini değiştirebilirsiniz. Eğer alternatif metod 1, 2 veya 6'yı kullanacaksanız, **Windows 10 için [buradan](https://www.ipsorgu.com/windows_10_dns_degistirme.php)**, **Windows 11 için [buradan](https://www.ipsorgu.com/windows_11_dns_degistirme.php)** bakarak Windows ayarlarında DNS'inizi tercih ettiğiniz bir DNS adresine çevirin (Tavsiye edilen: Yandex DNS - 77.88.8.8/77.88.8.1 , Cloudflare DNS - 1.1.1.1/1.0.0.1). Eğer alternatif metod 3, 4 veya 5'i kullanacaksanız ayrıca DNS ayarlamanıza gerek yok, çünkü alternatif metod 3, 4 ve 5'te önayarlı olarak Yandex DNS kullanılmaktayken; 1, 2 ve 6 numaralı alternatif metodlarda önayarlı DNS bulunmamaktadır.
 
+### AdGuard DNS Alternatifi
+
+Bazı bağlantılarda Yandex DNS'in 1253 portu, CNAME zinciri ile CDN'lere yönlenen alan adlarına (ör. Roblox görselleri için ``tr.rbxcdn.com``) boş yanıt döndürmektedir. Bu durumda siteler açılır ancak görseller yüklenmez ve sayfalar yavaşlar. Böyle bir sorun yaşıyorsanız ``turkey_dnsredir_adguard.cmd`` ya da ``service_install_dnsredir_adguard.cmd`` dosyalarını yönetici olarak çalıştırın. Bu dosyalar DNS sorgularını **AdGuard DNS'in filtresiz sunucusuna** (``94.140.14.140``, IPv6 ``2a10:50c0::1:ff``) **5353** portu üzerinden yönlendirir. Filtresiz sunucu reklam veya site engellemez.
+
 ## WinDivert.dll ve WinDivert64.sys Dosyalarını Silmek​
 
 Eğer bu dosyaları silmeye çalıştığınızda dosya kullanımda hatası alırsanız, indirdiğiniz dosyalardaki ``service_remove.cmd`` dosyasını yönetici olarak çalıştırdıktan sonra silebilirsiniz.
