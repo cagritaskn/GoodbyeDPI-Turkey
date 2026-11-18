@@ -1,0 +1,46 @@
+name: Script checks
+
+on:
+  push:
+    paths:
+      - 'windows/**'
+      - 'macos/scripts/**'
+      - '.github/workflows/script-checks.yml'
+  pull_request:
+    paths:
+      - 'windows/**'
+      - 'macos/scripts/**'
+      - '.github/workflows/script-checks.yml'
+  workflow_dispatch:
+
+jobs:
+  windows-dns-config:
+    name: Windows DNS configuration
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify every DNS-redirecting script uses Quad9
+        shell: powershell
+        run: ./windows/tests/check-dns-config.ps1
+
+  macos-shell-syntax:
+    name: macOS shell syntax
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: bash -n on all macOS scripts
+        run: |
+          set -e
+          for f in macos/scripts/*.sh; do
+            bash -n "$f"
+          done
+
+      - name: Verify macOS defaults to Quad9
+        run: |
+          set -e
+          source macos/scripts/_lib.sh
+          test "$DEFAULT_DNS_V4_PRIMARY" = "9.9.9.9"
+          test "$DEFAULT_DNS_V4_SECONDARY" = "149.112.112.112"
+          test "$(method_dns_mode default)" = "quad9"
+          test "$(method_dns_mode alt)" = "off"
+          echo "macOS DNS defaults OK"

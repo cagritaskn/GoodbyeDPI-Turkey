@@ -38,9 +38,12 @@ LAUNCHD_TEMPLATE="${MACOS_DIR}/launchd/${LAUNCHD_LABEL}.plist.template"
 CIADPI_HOST="${CIADPI_HOST:-127.0.0.1}"
 CIADPI_PORT="${CIADPI_PORT:-1080}"
 
-# Yandex DNS (matches the Windows scripts' --dns-addr 77.88.8.8 default).
-DEFAULT_DNS_V4_PRIMARY="${DEFAULT_DNS_V4_PRIMARY:-77.88.8.8}"
-DEFAULT_DNS_V4_SECONDARY="${DEFAULT_DNS_V4_SECONDARY:-77.88.8.1}"
+# Quad9 DNS (matches the Windows scripts' --dns-addr 9.9.9.9 default).
+# Yandex DNS (77.88.8.8) returns NODATA for Roblox/Spotify CDN CNAME chains
+# such as tr.rbxcdn.com, which leaves images and thumbnails blank. Quad9
+# resolves those chains correctly. See issue #93.
+DEFAULT_DNS_V4_PRIMARY="${DEFAULT_DNS_V4_PRIMARY:-9.9.9.9}"
+DEFAULT_DNS_V4_SECONDARY="${DEFAULT_DNS_V4_SECONDARY:-149.112.112.112}"
 
 # ---- logging ---------------------------------------------------------------
 
@@ -240,8 +243,8 @@ install_cleanup_trap() {
 # map to `--disorder 3+s`; the `-9` preset (no fake packet, fragment + record
 # split) maps cleanly to `--split 1+s --tlsrec 1+s`.
 #
-# DNS_MODE = "yandex"  -> force the system DNS to Yandex (matches the
-#                         Windows scripts that pass --dns-addr 77.88.8.8).
+# DNS_MODE = "quad9"   -> force the system DNS to Quad9 (matches the
+#                         Windows scripts that pass --dns-addr 9.9.9.9).
 # DNS_MODE = "off"     -> leave DNS untouched (mirrors the Windows scripts
 #                         that do NOT pass --dns-addr).
 #
@@ -251,7 +254,7 @@ install_cleanup_trap() {
 method_args() {
     case "$1" in
         default)
-            # Mirrors: goodbyedpi.exe -5 --set-ttl 5 --dns-addr Yandex
+            # Mirrors: goodbyedpi.exe -5 --set-ttl 5 --dns-addr Quad9
             echo "--split 1+s --disorder 3+s --tlsrec 3+s --mod-http hcsmix,dcsmix"
             ;;
         alt)
@@ -263,15 +266,15 @@ method_args() {
             echo "--split 1+s --disorder 3+s --mod-http hcsmix,dcsmix"
             ;;
         alt3)
-            # Mirrors: goodbyedpi.exe --set-ttl 3 --dns-addr Yandex
+            # Mirrors: goodbyedpi.exe --set-ttl 3 --dns-addr Quad9
             echo "--disorder 1+s --tlsrec 1+s"
             ;;
         alt4)
-            # Mirrors: goodbyedpi.exe -5 --dns-addr Yandex
+            # Mirrors: goodbyedpi.exe -5 --dns-addr Quad9
             echo "--split 1+s --disorder 3+s --mod-http hcsmix,dcsmix"
             ;;
         alt5)
-            # Mirrors: goodbyedpi.exe -9 --dns-addr Yandex
+            # Mirrors: goodbyedpi.exe -9 --dns-addr Quad9
             echo "--split 1+s --tlsrec 1+s --mod-http hcsmix,dcsmix"
             ;;
         alt6)
@@ -286,7 +289,7 @@ method_args() {
 
 method_dns_mode() {
     case "$1" in
-        default|alt3|alt4|alt5) echo "yandex" ;;
+        default|alt3|alt4|alt5) echo "quad9" ;;
         alt|alt2|alt6)          echo "off"    ;;
         *) die "Bilinmeyen yöntem: $1" ;;
     esac
@@ -308,7 +311,7 @@ run_method_oneshot() {
     install_cleanup_trap
 
     apply_proxy "$service"
-    if [[ "$(method_dns_mode "$method")" == "yandex" ]]; then
+    if [[ "$(method_dns_mode "$method")" == "quad9" ]]; then
         apply_dns "$service"
     fi
 
@@ -358,7 +361,7 @@ render_plist() {
 }
 
 # Install (or replace) the launchd service for the given method, then start
-# it. Also applies the system-wide SOCKS proxy + (optionally) Yandex DNS so
+# it. Also applies the system-wide SOCKS proxy + (optionally) Quad9 DNS so
 # that the service is actually used by applications.
 # Args: $1 = method name
 run_method_service_install() {
@@ -401,7 +404,7 @@ run_method_service_install() {
     launchctl kickstart -k "system/${LAUNCHD_LABEL}" 2>/dev/null || true
 
     apply_proxy "$service"
-    if [[ "$(method_dns_mode "$method")" == "yandex" ]]; then
+    if [[ "$(method_dns_mode "$method")" == "quad9" ]]; then
         apply_dns "$service"
     fi
 
