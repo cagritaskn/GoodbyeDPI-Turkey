@@ -54,6 +54,8 @@ set "SELECTED="
 set "SELECTED_ARGS="
 set "FALLBACK="
 set "FALLBACK_ARGS="
+set "BOTH="
+set "BOTH_ARGS="
 
 CALL :TRY "Varsayilan -5 set-ttl 5" "-5 --set-ttl 5"
 CALL :TRY "Alternatif 1-3 set-ttl 3" "--set-ttl 3"
@@ -62,12 +64,23 @@ CALL :TRY "Alternatif 5-6 -9" "-9"
 
 ECHO.
 ECHO =========================
+IF DEFINED BOTH GOTO INSTALL_BOTH
 IF DEFINED SELECTED GOTO INSTALL_SELECTED
 IF DEFINED FALLBACK GOTO INSTALL_FALLBACK
 GOTO INSTALL_DEFAULT
 
+:INSTALL_BOTH
+ECHO Secilen yontem ^(Discord + Roblox^): %BOTH%
+CALL :INSTALL "%BOTH%" "%BOTH_ARGS%"
+IF ERRORLEVEL 1 (
+  ECHO HATA: Secilen yontem kurulamadi.
+  GOTO FINAL_PAUSE
+)
+GOTO FINAL_REPORT
+
 :INSTALL_SELECTED
-ECHO Secilen yontem: %SELECTED%
+ECHO Discord calisiyor ancak Roblox CDN testini gecen yontem yok.
+ECHO Discord testini gecen yontem kuruluyor: %SELECTED%
 CALL :INSTALL "%SELECTED%" "%SELECTED_ARGS%"
 IF ERRORLEVEL 1 (
   ECHO HATA: Secilen yontem kurulamadi.
@@ -76,7 +89,7 @@ IF ERRORLEVEL 1 (
 GOTO FINAL_REPORT
 
 :INSTALL_FALLBACK
-ECHO Discord testini gecen yontem olmadi.
+ECHO Discord testini gecen yontem yok.
 ECHO Roblox CDN testini gecen yontem kuruluyor: %FALLBACK%
 CALL :INSTALL "%FALLBACK%" "%FALLBACK_ARGS%"
 GOTO FINAL_REPORT
@@ -137,6 +150,7 @@ set "CDN_OK=0"
 set "CDN_CODE=000"
 FOR /F "usebackq delims=" %%C IN (`curl.exe -sS --compressed --noproxy "*" -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" -m 15 -o NUL -w "%%{http_code}" "%CDN_URL%" 2^>nul`) DO set "CDN_CODE=%%C"
 IF "%CDN_CODE%"=="200" (
+  set "CDN_OK=1"
   ECHO   Roblox CDN: BASARILI ^(HTTP 200^)
   IF NOT DEFINED FALLBACK (
     set "FALLBACK=%NAME%"
@@ -144,6 +158,20 @@ IF "%CDN_CODE%"=="200" (
   )
 ) ELSE (
   ECHO   Roblox CDN: BASARISIZ ^(HTTP %CDN_CODE%^)
+)
+
+IF "%DISCORD_OK%"=="1" (
+  IF "%CDN_OK%"=="1" (
+    ECHO   Sonuc: Discord ve Roblox birlikte calisiyor.
+    IF NOT DEFINED BOTH (
+      set "BOTH=%NAME%"
+      set "BOTH_ARGS=%ARGS%"
+    )
+  ) ELSE (
+    ECHO   Sonuc: Roblox CDN testi basarisiz.
+  )
+) ELSE (
+  ECHO   Sonuc: Discord testi basarisiz.
 )
 EXIT /B 0
 
