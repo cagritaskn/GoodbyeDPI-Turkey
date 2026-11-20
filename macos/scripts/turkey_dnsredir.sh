@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# macOS karşılığı: turkey_dnsredir.cmd  (varsayılan yöntem, TTL=5 + Yandex DNS)
+# macOS karşılığı: turkey_dnsredir.cmd  (varsayılan yöntem, TTL=5 + Quad9 DNS)
 #
 # GoodbyeDPI-Turkey'i tek seferlik olarak çalıştırır. Bu komut dosyası bir
 # terminal penceresinde ciadpi'yi başlatır, sistem genelinde SOCKS proxy'sini
-# 127.0.0.1:1080 olarak ayarlar ve DNS sunucularını Yandex DNS olarak değiştirir.
+# 127.0.0.1:1080 olarak ayarlar ve DNS sunucularını Quad9 DNS olarak değiştirir.
 # Ctrl-C ile veya terminali kapatarak durdurabilirsiniz; çıkıldığında tüm
 # ağ ayarları otomatik olarak eski haline döner.
 #
