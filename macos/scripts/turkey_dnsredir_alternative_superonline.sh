@@ -4,7 +4,7 @@
 #
 # Tek seferlik çalıştırır, sistem DNS'ine dokunmaz. SOCKS proxy'sini
 # 127.0.0.1:1080 olarak ayarlar; çıkıldığında ayar otomatik kaldırılır.
-# Bu yöntemi kullandıktan SONRA macOS'ta DNS'i elle Yandex/Cloudflare'e
+# Bu yöntemi kullandıktan SONRA macOS'ta DNS'i elle Quad9/Cloudflare'e
 # çevirmeyi unutmayın (System Settings -> Network -> aktif servis -> DNS).
 
 set -euo pipefail

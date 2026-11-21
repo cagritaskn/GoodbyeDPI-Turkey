@@ -57,12 +57,12 @@ otomatik olarak `sudo` ile yeniden başlar. Ctrl-C ile çıktığınızda SOCKS 
 ve DNS ayarları **otomatik olarak eski haline döner**.
 
 ```bash
-sudo ./macos/scripts/turkey_dnsredir.sh                                  # varsayılan yöntem (Yandex DNS)
+sudo ./macos/scripts/turkey_dnsredir.sh                                  # varsayılan yöntem (Quad9 DNS)
 sudo ./macos/scripts/turkey_dnsredir_alternative_superonline.sh          # DNS değiştirmez
 sudo ./macos/scripts/turkey_dnsredir_alternative2_superonline.sh         # DNS değiştirmez
-sudo ./macos/scripts/turkey_dnsredir_alternative3_superonline.sh         # Yandex DNS
-sudo ./macos/scripts/turkey_dnsredir_alternative4_superonline.sh         # Yandex DNS
-sudo ./macos/scripts/turkey_dnsredir_alternative5_superonline.sh         # Yandex DNS
+sudo ./macos/scripts/turkey_dnsredir_alternative3_superonline.sh         # Quad9 DNS
+sudo ./macos/scripts/turkey_dnsredir_alternative4_superonline.sh         # Quad9 DNS
+sudo ./macos/scripts/turkey_dnsredir_alternative5_superonline.sh         # Quad9 DNS
 sudo ./macos/scripts/turkey_dnsredir_alternative6_superonline.sh         # DNS değiştirmez
 ```
 
@@ -117,22 +117,22 @@ gerçekten engelli olup olmadığını `curl -s -o /dev/null -w "%{http_code}"
 --noproxy '*' https://site` ile kontrol edin — `000` dönüyorsa listeye ekleyin.
 
 DNS ayarı değişmez: ISS resolver'ı `discord.com`'u engel IP'sine çözdüğü için
-Yandex DNS split tunnel modunda da gereklidir.
+Quad9 DNS split tunnel modunda da gereklidir.
 
 ## Yöntem ↔ Argüman Eşlemesi
 
 | Yöntem (Windows)                          | Windows args                       | macOS byedpi args                                          | DNS         |
 |-------------------------------------------|------------------------------------|------------------------------------------------------------|-------------|
-| `turkey_dnsredir`                         | `-5 --set-ttl 5 --dns-addr Y`      | `--split 1+s --disorder 3+s --tlsrec 3+s --mod-http h,d`   | Yandex      |
+| `turkey_dnsredir`                         | `-5 --set-ttl 5 --dns-addr Y`      | `--split 1+s --disorder 3+s --tlsrec 3+s --mod-http h,d`   | Quad9       |
 | `turkey_dnsredir_alternative_superonline` | `--set-ttl 3`                      | `--disorder 3+s --tlsrec 3+s`                              | değiştirmez |
 | `turkey_dnsredir_alternative2_*`          | `-5`                               | `--split 1+s --disorder 3+s --mod-http h,d`                | değiştirmez |
-| `turkey_dnsredir_alternative3_*`          | `--set-ttl 3 --dns-addr Y`         | `--disorder 1+s --tlsrec 1+s`                              | Yandex      |
-| `turkey_dnsredir_alternative4_*`          | `-5 --dns-addr Y`                  | `--split 1+s --disorder 3+s --mod-http h,d`                | Yandex      |
-| `turkey_dnsredir_alternative5_*`          | `-9 --dns-addr Y`                  | `--split 1+s --tlsrec 1+s --mod-http h,d`                  | Yandex      |
+| `turkey_dnsredir_alternative3_*`          | `--set-ttl 3 --dns-addr Y`         | `--disorder 1+s --tlsrec 1+s`                              | Quad9       |
+| `turkey_dnsredir_alternative4_*`          | `-5 --dns-addr Y`                  | `--split 1+s --disorder 3+s --mod-http h,d`                | Quad9       |
+| `turkey_dnsredir_alternative5_*`          | `-9 --dns-addr Y`                  | `--split 1+s --tlsrec 1+s --mod-http h,d`                  | Quad9       |
 | `turkey_dnsredir_alternative6_*`          | `-9`                               | `--split 1+s --tlsrec 1+s`                                 | değiştirmez |
 
 > `h,d` = `hcsmix,dcsmix` (HTTP Host başlığını karıştırır)
-> Y = Yandex DNS (`77.88.8.8` / `77.88.8.1`)
+> Y = Quad9 DNS (`9.9.9.9` / `149.112.112.112`)
 >
 > Bu eşlemeleri kendi ISS'niz için iyileştirmek isterseniz
 > `macos/scripts/_lib.sh` içindeki `method_args` fonksiyonunu düzenleyin —
@@ -165,4 +165,12 @@ sudo networksetup -setdnsservers              "Wi-Fi" Empty
   `127.0.0.1:1080` olarak ayarlamanız gerekebilir.
 - **DNS sızıntısı**: SOCKS5 default olarak DNS sorgularını uzaktan çözer ama
   bazı uygulamalar DNS'i kendi başına yapar. Bu yüzden script default yöntemde
-  sistem DNS'ini Yandex'e ayarlar.
+  sistem DNS'ini Quad9'a ayarlar.
+- **Roblox/Spotify görselleri yüklenmiyor (issue #93)**: Yandex DNS
+  (`77.88.8.8`) bazı CDN CNAME zincirlerine (ör. Roblox'un
+  `tr.rbxcdn.com` adresi) boş yanıt döndürüyor; siteler açılıyor ama
+  görseller, avatarlar ve albüm kapakları yüklenmiyor. Bu sürüm varsayılan
+  olarak Quad9 (`9.9.9.9` / `149.112.112.112`) kullanır. Yine sorun yaşarsanız
+  `DEFAULT_DNS_V4_PRIMARY` / `DEFAULT_DNS_V4_SECONDARY` ortam değişkenleriyle
+  farklı bir çözümleyici seçin ve DNS önbelleğini
+  `sudo dscacheutil -flushcache` ile temizleyin.
