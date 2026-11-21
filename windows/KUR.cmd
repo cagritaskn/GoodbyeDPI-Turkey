@@ -95,7 +95,7 @@ ECHO  Kurulum tamamlandi.
 ECHO.
 ECHO  Roblox ve Spotify'i yeniden baslatin.
 ECHO  Sorun devam ederse otomatik_method_sec.cmd
-ECHO  dosyasini yonetici olarak calistirin.
+ECHO  dosyasina cift tiklayin.
 ECHO.
 ECHO  Kaldirmak icin: service_remove.cmd
 ECHO ============================================

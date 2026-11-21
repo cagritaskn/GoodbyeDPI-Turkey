@@ -14,10 +14,9 @@ set "BODY=%TEMP%\gdp_autotest_body.txt"
 
 net session >nul 2>&1
 IF ERRORLEVEL 1 (
-  ECHO Bu scripti yonetici olarak calistirmaniz gerekiyor.
-  ECHO Sag tik - Yonetici Olarak Calistir.
-  PAUSE
-  EXIT /B 1
+  ECHO Yonetici izni isteniyor...
+  powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
+  EXIT /B
 )
 
 IF NOT EXIST "%EXE%" (
