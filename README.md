@@ -78,6 +78,18 @@ GoodbyeDPI Türkiye fork'unu batch dosyasını çalıştırarak kullanmak için 
 > [!NOTE]
 > ``turkey_dnsredir.cmd`` dosyasını yönetici olarak çalıştırdığınızda GoodbyeDPI aktif olacaktır. Ancak bu yöntemle çalıştırıldığında hem bilgisayarınız yeniden başlatıldığında GoodbyeDPI'ı elle açmanız gerekecek, hem de ``turkey_dnsredir.cmd`` ile açılan pencere kapatıldığında GoodbyeDPI deaktive olacaktır.
 
+## Masaüstü Widget'ı ile Başlatma / Durdurma
+
+``GoodbyeDPI-Widget.exe``, hizmeti klasöre gidip .cmd çalıştırmadan açıp kapatmanızı sağlar. Masaüstünde saydam, yuvarlak köşeli bir kare içinde wifi simgesi ve sistem tepsisinde (arka plan uygulamaları) durum ikonu olarak çalışır.
+
+- Derleme: ``windows\widget\build.cmd`` dosyasını çalıştırın. Windows ile gelen .NET Framework 4 derleyicisini kullanır ve ``windows\GoodbyeDPI-Widget.exe`` dosyasını oluşturur.
+- Exe, ``service_*.cmd`` dosyaları ve ``x86`` / ``x86_64`` klasörleri ile **aynı klasörde** durmalıdır.
+- Açarken ``service_install_dnsredir_turkey_alternative_superonline.cmd``, kapatırken ``service_remove.cmd`` dosyası arka planda çalıştırılır.
+- Wifi simgesi koruma açıkken yeşil, kapalıyken kırmızıdır. İşlem sürerken yaylar alttan üste sırayla yanar.
+- Simgenin en altındaki nokta düğmedir: koruma açıkken üzerine gelince kırmızı çarpıya dönüşür, tıklayınca kapatır. Kapalıyken nokta yeşile döner, tıklayınca açar. Fareyi widget üzerinde beklettiğinizde durum ve açık kalma süresi gösterilir.
+- Widget sürüklenerek taşınır. Tepsi ikonuna sol tık widget'ı gösterir/gizler. Sağ tık menüsünde *Her zaman üstte*, *Windows ile başlat* ve *Çıkış* seçenekleri vardır.
+- Uygulama yönetici yetkisi ister. *Windows ile başlat* seçeneği yönetici yetkili bir zamanlanmış görev oluşturur, bu yüzden her açılışta UAC sorulmaz.
+
 ## GoodbyeDPI'ı Kaldırmak ve DNS Ayarlarını Eski Haline Getirmek
 
 GoodbyeDPI'ı tamamen kapatmak ve silmek, bununla birlikte DNS atamasını kaldırmak için **[bu rehberi](https://github.com/cagritaskn/GoodbyeDPI-Turkey/blob/master/REVERT.md)** takip edebilirsiniz.
