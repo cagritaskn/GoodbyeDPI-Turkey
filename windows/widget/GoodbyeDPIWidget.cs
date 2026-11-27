@@ -1,11 +1,15 @@
 // GoodbyeDPI Widget
 // Masaustunde kucuk bir pencere ve sistem tepsisinde ikon olarak calisir.
-// Baslat: service_install_dnsredir_turkey.cmd
-// Durdur: service_remove.cmd
-// Scriptler bu exe ile ayni klasorde bulunmalidir.
+// GoodbyeDPI hizmetini Windows servis API'si ile dogrudan yonetir:
+//  - Ac:    hizmet yoksa kurulur, varsa yolu/parametreleri guncellenir; baslatma turu
+//           "otomatik" yapilir ve hizmet baslatilir. Bilgisayar yeniden baslayinca da acilir.
+//  - Kapat: hizmet durdurulur ve baslatma turu "elle" yapilir. Yeniden baslayinca kapali kalir.
+// goodbyedpi.exe parametreleri service_install_dnsredir_turkey.cmd icindeki "sc create"
+// satirindan okunur; DNS/TTL ayarlari tek yerde (o scriptte) durur.
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -16,6 +20,7 @@ using System.Security;
 using System.Security.Principal;
 using System.ServiceProcess;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -68,8 +73,7 @@ static class Native
 static class Config
 {
     public const string ServiceName = "GoodbyeDPI";
-    public const string StartScript = "service_install_dnsredir_turkey.cmd";
-    public const string StopScript = "service_remove.cmd";
+    public const string ParamsScript = "service_install_dnsredir_turkey.cmd";
     public const string TaskName = "GoodbyeDPI Widget";
 
     public static string AppDir { get { return Path.GetDirectoryName(Application.ExecutablePath); } }
@@ -129,33 +133,171 @@ static class ServiceOps
         }
     }
 
-    // Scripti gizli bir cmd ile calistirir. stdin hemen kapatildigi icin "pause" beklemeden gecer.
-    public static string RunScript(string scriptName)
+    // ---------- Win32 servis API ----------
+
+    const uint SC_MANAGER_ALL_ACCESS = 0xF003F;
+    const uint SERVICE_ALL_ACCESS = 0xF01FF;
+    const uint SERVICE_WIN32_OWN_PROCESS = 0x10;
+    const uint SERVICE_AUTO_START = 2;
+    const uint SERVICE_DEMAND_START = 3;
+    const uint SERVICE_ERROR_NORMAL = 1;
+    const uint SERVICE_NO_CHANGE = 0xFFFFFFFF;
+    const int SERVICE_CONFIG_DESCRIPTION = 1;
+    const int ERROR_SERVICE_DOES_NOT_EXIST = 1060;
+    const int ERROR_SERVICE_MARKED_FOR_DELETE = 1072;
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    struct SERVICE_DESCRIPTION { [MarshalAs(UnmanagedType.LPWStr)] public string lpDescription; }
+
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    static extern IntPtr OpenSCManager(string machine, string database, uint access);
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    static extern IntPtr OpenService(IntPtr scm, string name, uint access);
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    static extern IntPtr CreateService(IntPtr scm, string name, string displayName, uint access, uint serviceType,
+        uint startType, uint errorControl, string binaryPath, string loadOrderGroup, IntPtr tagId,
+        string dependencies, string startName, string password);
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    static extern bool ChangeServiceConfig(IntPtr service, uint serviceType, uint startType, uint errorControl,
+        string binaryPath, string loadOrderGroup, IntPtr tagId, string dependencies, string startName,
+        string password, string displayName);
+    [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    static extern bool ChangeServiceConfig2(IntPtr service, int infoLevel, ref SERVICE_DESCRIPTION info);
+    [DllImport("advapi32.dll", SetLastError = true)]
+    static extern bool CloseServiceHandle(IntPtr handle);
+
+    static Exception Win32Error(string what)
     {
-        string path = Path.Combine(Config.AppDir, scriptName);
-        if (!File.Exists(path))
-            throw new FileNotFoundException(scriptName + " bulunamadi. Widget exe'si scriptlerle ayni klasorde olmali.", path);
+        int code = Marshal.GetLastWin32Error();
+        if (code == ERROR_SERVICE_MARKED_FOR_DELETE)
+            return new InvalidOperationException(what + ": hizmet silinmek üzere işaretli. Hizmetler penceresi açıksa kapatıp tekrar deneyin.");
+        return new InvalidOperationException(what + ": " + new Win32Exception(code).Message);
+    }
 
-        Encoding oem = Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage);
-        ProcessStartInfo psi = new ProcessStartInfo("cmd.exe", "/d /c \"\"" + path + "\"\"");
-        psi.WorkingDirectory = Config.AppDir;
-        psi.UseShellExecute = false;
-        psi.CreateNoWindow = true;
-        psi.RedirectStandardInput = true;
-        psi.RedirectStandardOutput = true;
-        psi.RedirectStandardError = true;
-        psi.StandardOutputEncoding = oem;
-        psi.StandardErrorEncoding = oem;
+    // ---------- Ac / kapat ----------
 
-        StringBuilder err = new StringBuilder();
-        using (Process p = Process.Start(psi))
+    // service_install_dnsredir_turkey.cmd ile ayni mimari secimi.
+    static string Arch
+    {
+        get
         {
-            p.ErrorDataReceived += delegate(object s, DataReceivedEventArgs e) { if (e.Data != null) lock (err) err.AppendLine(e.Data); };
-            p.BeginErrorReadLine();
-            p.StandardInput.Close();
-            string output = p.StandardOutput.ReadToEnd();
-            p.WaitForExit();
-            lock (err) return output + err.ToString();
+            string a = Environment.GetEnvironmentVariable("PROCESSOR_ARCHITECTURE");
+            bool x64 = string.Equals(a, "AMD64", StringComparison.OrdinalIgnoreCase)
+                || Environment.GetEnvironmentVariable("PROCESSOR_ARCHITEW6432") != null;
+            return x64 ? "x86_64" : "x86";
+        }
+    }
+
+    // Parametre scriptindeki "sc create" ve "sc description" satirlarini okur.
+    static void ReadScript(out string args, out string description)
+    {
+        string path = Path.Combine(Config.AppDir, Config.ParamsScript);
+        if (!File.Exists(path))
+            throw new FileNotFoundException(Config.ParamsScript + " bulunamadı. Widget, bu script ile aynı klasörde olmalı.", path);
+        string text = File.ReadAllText(path);
+
+        Match m = Regex.Match(text, @"binPath=\s*""\\""%CD%\\%_arch%\\goodbyedpi\.exe\\""\s*(?<args>[^""]*)""", RegexOptions.IgnoreCase);
+        if (!m.Success)
+            throw new InvalidOperationException(Config.ParamsScript + " içindeki \"sc create\" satırı okunamadı.");
+        args = m.Groups["args"].Value.Trim();
+
+        Match d = Regex.Match(text, @"sc\s+description\s+""GoodbyeDPI""\s+""(?<d>[^""]*)""", RegexOptions.IgnoreCase);
+        description = d.Success ? d.Groups["d"].Value : null;
+    }
+
+    public static void Start()
+    {
+        string exe = Path.Combine(Config.AppDir, Arch + "\\goodbyedpi.exe");
+        if (!File.Exists(exe))
+            throw new FileNotFoundException(Arch + "\\goodbyedpi.exe bulunamadı. Release zip'indeki " + Arch +
+                " klasörünü widget ile aynı klasöre kopyalayın.", exe);
+
+        string args, description;
+        ReadScript(out args, out description);
+        string binPath = "\"" + exe + "\"" + (args.Length > 0 ? " " + args : "");
+
+        IntPtr scm = OpenSCManager(null, null, SC_MANAGER_ALL_ACCESS);
+        if (scm == IntPtr.Zero) throw Win32Error("Hizmet yöneticisi açılamadı");
+        try
+        {
+            IntPtr svc = OpenService(scm, Config.ServiceName, SERVICE_ALL_ACCESS);
+            if (svc == IntPtr.Zero)
+            {
+                if (Marshal.GetLastWin32Error() != ERROR_SERVICE_DOES_NOT_EXIST) throw Win32Error("Hizmet açılamadı");
+                svc = CreateService(scm, Config.ServiceName, Config.ServiceName, SERVICE_ALL_ACCESS,
+                    SERVICE_WIN32_OWN_PROCESS, SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, binPath,
+                    null, IntPtr.Zero, null, null, null);
+                if (svc == IntPtr.Zero) throw Win32Error("Hizmet kurulamadı");
+            }
+            else if (!ChangeServiceConfig(svc, SERVICE_NO_CHANGE, SERVICE_AUTO_START, SERVICE_NO_CHANGE, binPath,
+                         null, IntPtr.Zero, null, null, null, null))
+            {
+                CloseServiceHandle(svc);
+                throw Win32Error("Hizmet ayarlanamadı");
+            }
+
+            if (description != null)
+            {
+                SERVICE_DESCRIPTION sd = new SERVICE_DESCRIPTION { lpDescription = description };
+                ChangeServiceConfig2(svc, SERVICE_CONFIG_DESCRIPTION, ref sd);
+            }
+            CloseServiceHandle(svc);
+        }
+        finally { CloseServiceHandle(scm); }
+
+        using (ServiceController sc = new ServiceController(Config.ServiceName))
+        {
+            if (sc.Status == ServiceControllerStatus.StopPending)
+                sc.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(15));
+            if (sc.Status == ServiceControllerStatus.Stopped)
+            {
+                try { sc.Start(); }
+                catch (InvalidOperationException ex)
+                {
+                    throw new InvalidOperationException("Hizmet başlatılamadı: " +
+                        (ex.InnerException != null ? ex.InnerException.Message : ex.Message));
+                }
+            }
+            sc.WaitForStatus(ServiceControllerStatus.Running, TimeSpan.FromSeconds(15));
+        }
+
+        // goodbyedpi.exe acilir acilmaz kapanirsa (ornegin WinDivert yuklenemezse) bunu yakala.
+        Thread.Sleep(1500);
+        if (Query() != DpiState.Running)
+            throw new InvalidOperationException("Hizmet başladı ama hemen durdu. Olay Görüntüleyicisi'nde GoodbyeDPI kayıtlarına bakın.");
+    }
+
+    public static void Stop()
+    {
+        IntPtr scm = OpenSCManager(null, null, SC_MANAGER_ALL_ACCESS);
+        if (scm == IntPtr.Zero) throw Win32Error("Hizmet yöneticisi açılamadı");
+        try
+        {
+            IntPtr svc = OpenService(scm, Config.ServiceName, SERVICE_ALL_ACCESS);
+            if (svc == IntPtr.Zero)
+            {
+                if (Marshal.GetLastWin32Error() == ERROR_SERVICE_DOES_NOT_EXIST) return;
+                throw Win32Error("Hizmet açılamadı");
+            }
+            bool ok = ChangeServiceConfig(svc, SERVICE_NO_CHANGE, SERVICE_DEMAND_START, SERVICE_NO_CHANGE,
+                null, null, IntPtr.Zero, null, null, null, null);
+            if (!ok)
+            {
+                Exception err = Win32Error("Hizmet ayarlanamadı");
+                CloseServiceHandle(svc);
+                throw err;
+            }
+            CloseServiceHandle(svc);
+        }
+        finally { CloseServiceHandle(scm); }
+
+        using (ServiceController sc = new ServiceController(Config.ServiceName))
+        {
+            if (sc.Status == ServiceControllerStatus.StartPending)
+                sc.WaitForStatus(ServiceControllerStatus.Running, TimeSpan.FromSeconds(15));
+            if (sc.Status != ServiceControllerStatus.Stopped && sc.Status != ServiceControllerStatus.StopPending)
+                sc.Stop();
+            sc.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(15));
         }
     }
 }

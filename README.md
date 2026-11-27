@@ -100,7 +100,8 @@ GoodbyeDPI Türkiye fork'unu batch dosyasını çalıştırarak kullanmak için 
 
 - Wifi simgesi koruma açıkken **yeşil**, kapalıyken **kırmızıdır**. İşlem sürerken yaylar alttan üste sırayla yanar.
 - Simgenin en altındaki **nokta düğmedir**: koruma açıkken üzerine gelince kırmızı çarpıya dönüşür, tıklayınca kapatır. Kapalıyken nokta yeşile döner, tıklayınca açar.
-- Açarken ``service_install_dnsredir_turkey.cmd``, kapatırken ``service_remove.cmd`` arka planda çalıştırılır. Hizmet otomatik başlatmalı kurulduğu için bilgisayar yeniden başlatıldığında açık kalır.
+- Widget hizmeti kendisi kurar ve yönetir, arka planda cmd çalıştırmaz. Açık bırakılan hizmet bilgisayar yeniden başlatıldığında otomatik açılır; widget'tan kapatılan hizmet yeniden başlatmadan sonra da kapalı kalır.
+- goodbyedpi parametreleri (DNS, TTL vb.) ``service_install_dnsredir_turkey.cmd`` içindeki ``sc create`` satırından okunur. Ayarları değiştirmek için bu dosyayı düzenleyip widget'tan kapatıp yeniden açmanız yeterlidir.
 - Fareyi widget üzerinde beklettiğinizde durum ve açık kalma süresi gösterilir.
 - Widget sürüklenerek taşınır. Tepsi ikonuna sol tık widget'ı gösterir/gizler. Sağ tık menüsünde *Başlat/Durdur*, *Her zaman üstte*, *Windows ile başlat* ve *Çıkış* seçenekleri vardır.
 - *Windows ile başlat*, widget'ı oturum açılışında yönetici yetkisiyle başlatan bir zamanlanmış görev oluşturur; her açılışta UAC sorulmaz.

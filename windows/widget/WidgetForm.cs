@@ -387,7 +387,7 @@ class WidgetForm : Form
         {
             case DpiState.Running:
                 return "Açık · " + Uptime(DateTime.Now - (runningSince ?? DateTime.Now));
-            case DpiState.Stopped: return "Durduruldu";
+            case DpiState.Stopped:
             case DpiState.NotInstalled: return "Kapalı";
             default: return "Bekleniyor…";
         }
@@ -626,36 +626,26 @@ class WidgetForm : Form
     void Toggle()
     {
         if (busy) return;
-        bool running = IsOnLike;
-        string script = running ? Config.StopScript : Config.StartScript;
-        DpiState expectOk = running ? DpiState.NotInstalled : DpiState.Running;
+        bool starting = !IsOnLike;
 
         busy = true;
-        busyStarting = !running;
+        busyStarting = starting;
         wave = 0f;
         ApplyState(DpiState.Busy);
 
         Thread t = new Thread(delegate()
         {
-            string output = null;
             string error = null;
-            DpiState result = DpiState.Busy;
             try
             {
-                output = ServiceOps.RunScript(script);
-                // Servisin son durumuna oturmasini bekle (en fazla ~10 sn).
-                for (int i = 0; i < 20; i++)
-                {
-                    result = ServiceOps.Query();
-                    if (result == expectOk) break;
-                    Thread.Sleep(500);
-                }
+                if (starting) ServiceOps.Start();
+                else ServiceOps.Stop();
             }
             catch (Exception ex)
             {
                 error = ex.Message;
-                result = ServiceOps.Query();
             }
+            DpiState result = ServiceOps.Query();
 
             BeginInvoke((MethodInvoker)delegate
             {
@@ -663,20 +653,10 @@ class WidgetForm : Form
                 ApplyState(result);
                 if (error != null)
                     tray.ShowBalloonTip(5000, "GoodbyeDPI", error, ToolTipIcon.Error);
-                else if (result != expectOk && !(expectOk == DpiState.NotInstalled && result == DpiState.Stopped))
-                    tray.ShowBalloonTip(5000, "GoodbyeDPI", "İşlem beklenen sonucu vermedi.\n" + Tail(output, 3), ToolTipIcon.Warning);
             });
         });
         t.IsBackground = true;
         t.Start();
-    }
-
-    static string Tail(string text, int lines)
-    {
-        if (string.IsNullOrEmpty(text)) return "";
-        string[] all = text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-        int start = Math.Max(0, all.Length - lines);
-        return string.Join("\n", all, start, all.Length - start);
     }
 
     void SetWidgetVisible(bool v)
