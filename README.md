@@ -84,7 +84,7 @@ GoodbyeDPI Türkiye fork'unu batch dosyasını çalıştırarak kullanmak için 
 
 - Derleme: ``windows\widget\build.cmd`` dosyasını çalıştırın. Windows ile gelen .NET Framework 4 derleyicisini kullanır ve ``windows\GoodbyeDPI-Widget.exe`` dosyasını oluşturur.
 - Exe, ``service_*.cmd`` dosyaları ve ``x86`` / ``x86_64`` klasörleri ile **aynı klasörde** durmalıdır.
-- Açarken ``service_install_dnsredir_turkey_alternative_superonline.cmd``, kapatırken ``service_remove.cmd`` dosyası arka planda çalıştırılır.
+- Açarken ``service_install_dnsredir_turkey.cmd``, kapatırken ``service_remove.cmd`` dosyası arka planda çalıştırılır.
 - Wifi simgesi koruma açıkken yeşil, kapalıyken kırmızıdır. İşlem sürerken yaylar alttan üste sırayla yanar.
 - Simgenin en altındaki nokta düğmedir: koruma açıkken üzerine gelince kırmızı çarpıya dönüşür, tıklayınca kapatır. Kapalıyken nokta yeşile döner, tıklayınca açar. Fareyi widget üzerinde beklettiğinizde durum ve açık kalma süresi gösterilir.
 - Widget sürüklenerek taşınır. Tepsi ikonuna sol tık widget'ı gösterir/gizler. Sağ tık menüsünde *Her zaman üstte*, *Windows ile başlat* ve *Çıkış* seçenekleri vardır.

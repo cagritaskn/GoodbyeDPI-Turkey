@@ -1,6 +1,6 @@
 // GoodbyeDPI Widget
 // Masaustunde kucuk bir pencere ve sistem tepsisinde ikon olarak calisir.
-// Baslat: service_install_dnsredir_turkey_alternative_superonline.cmd
+// Baslat: service_install_dnsredir_turkey.cmd
 // Durdur: service_remove.cmd
 // Scriptler bu exe ile ayni klasorde bulunmalidir.
 
@@ -68,7 +68,7 @@ static class Native
 static class Config
 {
     public const string ServiceName = "GoodbyeDPI";
-    public const string StartScript = "service_install_dnsredir_turkey_alternative_superonline.cmd";
+    public const string StartScript = "service_install_dnsredir_turkey.cmd";
     public const string StopScript = "service_remove.cmd";
     public const string TaskName = "GoodbyeDPI Widget";
 
