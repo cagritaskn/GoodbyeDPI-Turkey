@@ -6,3 +6,7 @@ macos/bin/
 macos/third_party/byedpi/
 macos/launchd/com.cagritaskn.goodbyedpi-turkey.plist
 .DS_Store
+
+# GoodbyeDPI binaries copied from the release zip
+windows/x86/
+windows/x86_64/

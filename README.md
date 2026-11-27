@@ -80,15 +80,30 @@ GoodbyeDPI Türkiye fork'unu batch dosyasını çalıştırarak kullanmak için 
 
 ## Masaüstü Widget'ı ile Başlatma / Durdurma
 
-``GoodbyeDPI-Widget.exe``, hizmeti klasöre gidip .cmd çalıştırmadan açıp kapatmanızı sağlar. Masaüstünde saydam, yuvarlak köşeli bir kare içinde wifi simgesi ve sistem tepsisinde (arka plan uygulamaları) durum ikonu olarak çalışır.
+``GoodbyeDPI-Widget.exe``, hizmeti klasöre gidip .cmd çalıştırmadan tek tıkla açıp kapatmanızı sağlar. Masaüstünde küçük, yarı saydam bir kare içinde wifi simgesi olarak durur; sistem tepsisinde de durum ikonu görünür.
 
-- Derleme: ``windows\widget\build.cmd`` dosyasını çalıştırın. Windows ile gelen .NET Framework 4 derleyicisini kullanır ve ``windows\GoodbyeDPI-Widget.exe`` dosyasını oluşturur.
-- Exe, ``service_*.cmd`` dosyaları ve ``x86`` / ``x86_64`` klasörleri ile **aynı klasörde** durmalıdır.
-- Açarken ``service_install_dnsredir_turkey.cmd``, kapatırken ``service_remove.cmd`` dosyası arka planda çalıştırılır.
-- Wifi simgesi koruma açıkken yeşil, kapalıyken kırmızıdır. İşlem sürerken yaylar alttan üste sırayla yanar.
-- Simgenin en altındaki nokta düğmedir: koruma açıkken üzerine gelince kırmızı çarpıya dönüşür, tıklayınca kapatır. Kapalıyken nokta yeşile döner, tıklayınca açar. Fareyi widget üzerinde beklettiğinizde durum ve açık kalma süresi gösterilir.
-- Widget sürüklenerek taşınır. Tepsi ikonuna sol tık widget'ı gösterir/gizler. Sağ tık menüsünde *Her zaman üstte*, *Windows ile başlat* ve *Çıkış* seçenekleri vardır.
-- Uygulama yönetici yetkisi ister. *Windows ile başlat* seçeneği yönetici yetkili bir zamanlanmış görev oluşturur, bu yüzden her açılışta UAC sorulmaz.
+| Açık | Açık, noktanın üzerinde | Kapalı | Kapalı, noktanın üzerinde | Başlatılıyor |
+|:---:|:---:|:---:|:---:|:---:|
+| <img src="windows/widget/images/widget-acik.png" width="96" alt="Açık"> | <img src="windows/widget/images/widget-acik-hover.png" width="96" alt="Açık, noktanın üzerinde"> | <img src="windows/widget/images/widget-kapali.png" width="96" alt="Kapalı"> | <img src="windows/widget/images/widget-kapali-hover.png" width="96" alt="Kapalı, noktanın üzerinde"> | <img src="windows/widget/images/widget-baslatiliyor.png" width="96" alt="Başlatılıyor"> |
+
+### Kurulum
+
+1. Bu repoyu bilgisayarınıza indirin (``git clone`` ya da *Code → Download ZIP*).
+2. [goodbyedpi-0.2.3rc3-turkey.zip](https://github.com/cagritaskn/GoodbyeDPI-Turkey/releases/download/release-0.2.3rc3-turkey/goodbyedpi-0.2.3rc3-turkey.zip) dosyasını indirin ve içindeki ``x86`` ile ``x86_64`` klasörlerini reponun ``windows`` klasörüne kopyalayın. ``goodbyedpi.exe`` repoda bulunmaz, yalnızca bu zip'te gelir; bu adım atlanırsa hizmet *"The system cannot find the file specified"* hatasıyla başlamaz.
+3. ``windows\widget\build.cmd`` dosyasını çalıştırın. Windows ile gelen .NET Framework 4 derleyicisini kullanır, ek kurulum gerekmez. ``windows\GoodbyeDPI-Widget.exe`` oluşturulur.
+4. ``windows\GoodbyeDPI-Widget.exe`` dosyasını açın. Uygulama yönetici yetkisi ister.
+
+> [!IMPORTANT]
+> Hizmet, widget'ın bulunduğu klasördeki ``x86_64\goodbyedpi.exe`` dosyasıyla kurulur. Kurulumdan sonra bu klasörü taşımayın ya da silmeyin; aksi halde hizmet bir sonraki açılışta başlayamaz.
+
+### Kullanım
+
+- Wifi simgesi koruma açıkken **yeşil**, kapalıyken **kırmızıdır**. İşlem sürerken yaylar alttan üste sırayla yanar.
+- Simgenin en altındaki **nokta düğmedir**: koruma açıkken üzerine gelince kırmızı çarpıya dönüşür, tıklayınca kapatır. Kapalıyken nokta yeşile döner, tıklayınca açar.
+- Açarken ``service_install_dnsredir_turkey.cmd``, kapatırken ``service_remove.cmd`` arka planda çalıştırılır. Hizmet otomatik başlatmalı kurulduğu için bilgisayar yeniden başlatıldığında açık kalır.
+- Fareyi widget üzerinde beklettiğinizde durum ve açık kalma süresi gösterilir.
+- Widget sürüklenerek taşınır. Tepsi ikonuna sol tık widget'ı gösterir/gizler. Sağ tık menüsünde *Başlat/Durdur*, *Her zaman üstte*, *Windows ile başlat* ve *Çıkış* seçenekleri vardır.
+- *Windows ile başlat*, widget'ı oturum açılışında yönetici yetkisiyle başlatan bir zamanlanmış görev oluşturur; her açılışta UAC sorulmaz.
 
 ## GoodbyeDPI'ı Kaldırmak ve DNS Ayarlarını Eski Haline Getirmek
 

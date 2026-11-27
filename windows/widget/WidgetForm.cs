@@ -587,6 +587,22 @@ class WidgetForm : Form
         }
     }
 
+    // Tepsi ikonu: wifi simgesi w x w ikona orantili sigdirilir ve ortalanir.
+    // En distaki yayin genisligi 2 * 3u * sin45 + kalinlik oldugundan yay araligi (u) buna gore secilir.
+    static void DrawTrayGlyph(Graphics g, float w, Color c)
+    {
+        g.SmoothingMode = SmoothingMode.AntiAlias;
+        g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+        float stroke = Math.Max(1.5f, w * 0.12f);
+        float dot = Math.Max(1.1f, w * 0.085f);
+        float unit = (w * 0.92f - stroke) / (3f * 1.4142f);
+        float glyphH = unit * 3 + stroke / 2 + dot;
+        PointF p = new PointF(w / 2, (w - glyphH) / 2 + unit * 3 + stroke / 2);
+        Theme.DrawWifiArcs(g, p, unit, stroke, c, new[] { 1f, 1f, 1f });
+        using (SolidBrush b = new SolidBrush(c))
+            g.FillEllipse(b, p.X - dot, p.Y - dot, dot * 2, dot * 2);
+    }
+
     void UpdateTrayIcon()
     {
         Size sz = SystemInformation.SmallIconSize;
@@ -594,15 +610,8 @@ class WidgetForm : Form
         {
             using (Graphics g = Graphics.FromImage(bmp))
             {
-                g.SmoothingMode = SmoothingMode.AntiAlias;
-                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
-                float w = sz.Width;
                 Color c = busy ? Color.FromArgb(255, 200, 40) : (IsOnLike ? Theme.On : Theme.Off);
-                float unit = w * 0.27f, width = w * 0.13f, dot = w * 0.09f;
-                PointF p = new PointF(w / 2, w * 0.5f + unit * 1.5f - dot * 0.2f);
-                Theme.DrawWifiArcs(g, p, unit, width, c, new[] { 1f, 1f, 1f });
-                using (SolidBrush b = new SolidBrush(c))
-                    g.FillEllipse(b, p.X - dot, p.Y - dot, dot * 2, dot * 2);
+                DrawTrayGlyph(g, sz.Width, c);
             }
             IntPtr h = bmp.GetHicon();
             tray.Icon = System.Drawing.Icon.FromHandle(h);
