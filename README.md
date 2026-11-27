@@ -78,6 +78,34 @@ GoodbyeDPI Türkiye fork'unu batch dosyasını çalıştırarak kullanmak için 
 > [!NOTE]
 > ``turkey_dnsredir.cmd`` dosyasını yönetici olarak çalıştırdığınızda GoodbyeDPI aktif olacaktır. Ancak bu yöntemle çalıştırıldığında hem bilgisayarınız yeniden başlatıldığında GoodbyeDPI'ı elle açmanız gerekecek, hem de ``turkey_dnsredir.cmd`` ile açılan pencere kapatıldığında GoodbyeDPI deaktive olacaktır.
 
+## Masaüstü Widget'ı ile Başlatma / Durdurma
+
+``GoodbyeDPI-Widget.exe``, hizmeti klasöre gidip .cmd çalıştırmadan tek tıkla açıp kapatmanızı sağlar. Masaüstünde küçük, yarı saydam bir kare içinde wifi simgesi olarak durur; sistem tepsisinde de durum ikonu görünür.
+
+| Açık | Açık, noktanın üzerinde | Kapalı | Kapalı, noktanın üzerinde | Başlatılıyor |
+|:---:|:---:|:---:|:---:|:---:|
+| <img src="windows/widget/images/widget-acik.png" width="96" alt="Açık"> | <img src="windows/widget/images/widget-acik-hover.png" width="96" alt="Açık, noktanın üzerinde"> | <img src="windows/widget/images/widget-kapali.png" width="96" alt="Kapalı"> | <img src="windows/widget/images/widget-kapali-hover.png" width="96" alt="Kapalı, noktanın üzerinde"> | <img src="windows/widget/images/widget-baslatiliyor.png" width="96" alt="Başlatılıyor"> |
+
+### Kurulum
+
+1. Bu repoyu bilgisayarınıza indirin (``git clone`` ya da *Code → Download ZIP*).
+2. [goodbyedpi-0.2.3rc3-turkey.zip](https://github.com/cagritaskn/GoodbyeDPI-Turkey/releases/download/release-0.2.3rc3-turkey/goodbyedpi-0.2.3rc3-turkey.zip) dosyasını indirin ve içindeki ``x86`` ile ``x86_64`` klasörlerini reponun ``windows`` klasörüne kopyalayın. ``goodbyedpi.exe`` repoda bulunmaz, yalnızca bu zip'te gelir; bu adım atlanırsa hizmet *"The system cannot find the file specified"* hatasıyla başlamaz.
+3. ``windows\widget\build.cmd`` dosyasını çalıştırın. Windows ile gelen .NET Framework 4 derleyicisini kullanır, ek kurulum gerekmez. ``windows\GoodbyeDPI-Widget.exe`` oluşturulur.
+4. ``windows\GoodbyeDPI-Widget.exe`` dosyasını açın. Uygulama yönetici yetkisi ister.
+
+> [!IMPORTANT]
+> Hizmet, widget'ın bulunduğu klasördeki ``x86_64\goodbyedpi.exe`` dosyasıyla kurulur. Kurulumdan sonra bu klasörü taşımayın ya da silmeyin; aksi halde hizmet bir sonraki açılışta başlayamaz.
+
+### Kullanım
+
+- Wifi simgesi koruma açıkken **yeşil**, kapalıyken **kırmızıdır**. İşlem sürerken yaylar alttan üste sırayla yanar.
+- Simgenin en altındaki **nokta düğmedir**: koruma açıkken üzerine gelince kırmızı çarpıya dönüşür, tıklayınca kapatır. Kapalıyken nokta yeşile döner, tıklayınca açar.
+- Widget hizmeti kendisi kurar ve yönetir, arka planda cmd çalıştırmaz. Açık bırakılan hizmet bilgisayar yeniden başlatıldığında otomatik açılır; widget'tan kapatılan hizmet yeniden başlatmadan sonra da kapalı kalır.
+- goodbyedpi parametreleri (DNS, TTL vb.) ``service_install_dnsredir_turkey.cmd`` içindeki ``sc create`` satırından okunur. Ayarları değiştirmek için bu dosyayı düzenleyip widget'tan kapatıp yeniden açmanız yeterlidir.
+- Fareyi widget üzerinde beklettiğinizde durum ve açık kalma süresi gösterilir.
+- Widget sürüklenerek taşınır. Tepsi ikonuna sol tık widget'ı gösterir/gizler. Sağ tık menüsünde *Başlat/Durdur*, *Her zaman üstte*, *Windows ile başlat* ve *Çıkış* seçenekleri vardır.
+- *Windows ile başlat*, widget'ı oturum açılışında yönetici yetkisiyle başlatan bir zamanlanmış görev oluşturur; her açılışta UAC sorulmaz.
+
 ## GoodbyeDPI'ı Kaldırmak ve DNS Ayarlarını Eski Haline Getirmek
 
 GoodbyeDPI'ı tamamen kapatmak ve silmek, bununla birlikte DNS atamasını kaldırmak için **[bu rehberi](https://github.com/cagritaskn/GoodbyeDPI-Turkey/blob/master/REVERT.md)** takip edebilirsiniz.
